@@ -1,0 +1,12 @@
+{
+    "name": "google-apps-script-project",
+    "version": "1.0.0",
+    "description": "Google Apps Script Project",
+    "main": "index.js",
+    "scripts": {
+      "start": "clasp push"
+    },
+    "dependencies": {},
+    "devDependencies": {}
+  }
+  

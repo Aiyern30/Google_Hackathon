@@ -1,0 +1,15 @@
+node_modules/*
+.next/*
+.vscode/*
+
+.git/
+.eslintrc.json
+.gitignore
+next-env.d.ts
+next.config.mjs
+package-lock.json
+package.json
+postcss.config.mjs
+README.md
+tailwind.config.ts
+tsconfig.json
