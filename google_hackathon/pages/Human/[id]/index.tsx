@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/Select";
 import { DatePickerDemo } from "@/components/ui/DatePickerDemo";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const ProfilePage = () => {
   const router = useRouter();
@@ -117,18 +119,22 @@ const ProfilePage = () => {
 
       if (response.ok) {
         setData(formData);
+        toast.success('Profile updated successfully!');
       } else {
         const result = await response.json();
         setError(result.error || "Failed to save data");
+        toast.error(result.error || "Failed to save data");
       }
     } catch (error) {
       setError("Failed to save data");
+      toast.error("Failed to save data");
     }
   };
 
   return (
     <div>
       <Header Title={`${data?.name || "Employee"}'s Profile Page`} />
+      <ToastContainer />
       {loading ? (
         <div className="fixed inset-0 flex items-center justify-center bg-white">
           <div className="relative flex justify-center items-center">

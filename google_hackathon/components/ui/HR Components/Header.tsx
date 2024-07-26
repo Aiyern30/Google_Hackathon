@@ -26,7 +26,7 @@ const Header = ({ Title }: HeaderProps) => {
               {/* <MenubarItem onClick={()=> router.push("/Human/AddEmployee")}>
                 Add Employee
               </MenubarItem> */}
-              <MenubarItem onClick={()=> router.push("/Human/Recruiment")}>View Recruitment</MenubarItem>
+              <MenubarItem onClick={()=> router.push("/Human/Recruitments")}>View Recruitment</MenubarItem>
               
             </MenubarContent>
           </MenubarMenu>

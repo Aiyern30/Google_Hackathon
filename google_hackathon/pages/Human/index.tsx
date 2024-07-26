@@ -152,6 +152,7 @@ const Index = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [employeeData, setEmployeeData] = useState<Employee[]>([]);
   const [filters, setFilters] = useState<{ [key: string]: string }>({});
+  const [loading, setLoading] = useState<boolean>(true); // Add loading state
   const itemsPerPage = 5;
 
   const handlePageChange = (pageNumber: number) => {
@@ -178,6 +179,8 @@ const Index = () => {
         setEmployeeData(formattedData);
       } catch (error) {
         console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false); // Set loading to false after data is fetched
       }
     };
 
@@ -213,9 +216,20 @@ const Index = () => {
   // Get the count of new employees hired in 2024
   const newEmployeeCount = getNewEmployeeCount(employeeData);
 
+  if (loading) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-white">
+        <div className="relative flex justify-center items-center">
+          <div className="absolute animate-spin rounded-full h-32 w-32 border-t-4 border-b-4 border-purple-500"></div>
+          <img src="https://www.svgrepo.com/show/509001/avatar-thinking-9.svg" className="rounded-full h-28 w-28" />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div>
-      <Header Title="Human Resource Home Page"></Header>
+      <Header Title="Human Resource Home Page" />
       <div className="container flex justify-center items-center p-5">
         <div className="flex space-x-3">
           <Card className="min-w-64">
@@ -262,39 +276,20 @@ const Index = () => {
           data={paginatedData}
           onFilterChange={handleFilterChange}
         />
-        <Pagination className="pt-5">
+        <Pagination>
           <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious
-                href="#"
-                onClick={() => handlePageChange(currentPage - 1)}
-                className={
-                  currentPage === 1 ? "pointer-events-none opacity-50" : ""
-                }
-              />
-            </PaginationItem>
-            {Array.from({ length: totalPages }, (_, index) => (
-              <PaginationItem key={index + 1}>
-                <PaginationLink
-                  href="#"
-                  onClick={() => handlePageChange(index + 1)}
-                  className={currentPage === index + 1 ? "font-bold" : ""}
-                >
-                  {index + 1}
-                </PaginationLink>
-              </PaginationItem>
-            ))}
-            <PaginationItem>
-              <PaginationNext
-                href="#"
-                onClick={() => handlePageChange(currentPage + 1)}
-                className={
-                  currentPage === totalPages
-                    ? "pointer-events-none opacity-50"
-                    : ""
-                }
-              />
-            </PaginationItem>
+          <PaginationPrevious
+  onClick={() => handlePageChange(currentPage - 1)}
+>
+  <Button>Previous</Button>
+</PaginationPrevious>
+<PaginationItem>{`Page ${currentPage} of ${totalPages}`}</PaginationItem>
+<PaginationNext
+  onClick={() => handlePageChange(currentPage + 1)}
+>
+  <Button>Next</Button>
+</PaginationNext>
+
           </PaginationContent>
         </Pagination>
       </div>
