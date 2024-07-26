@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   ColumnDef,
   flexRender,
@@ -56,6 +56,7 @@ const columns: ColumnDef<Employee>[] = [
   },
   { accessorKey: "status", header: "Status" },
 ];
+
 const getNewEmployeeCount = (data: Employee[]) => {
   return data.filter((employee) => {
     const hireYear = new Date(employee.hireDate).getFullYear();
@@ -63,7 +64,7 @@ const getNewEmployeeCount = (data: Employee[]) => {
   }).length;
 };
 
-function DataTable<TData>({
+function DataTable<TData extends Employee>({
   columns,
   data,
   onFilterChange,
@@ -79,8 +80,8 @@ function DataTable<TData>({
     getCoreRowModel: getCoreRowModel(),
   });
 
-  const handleRowClick = (id: string) => {
-    router.push(`/Human/${id}`);
+  const handleRowClick = (employeeId: string) => {
+    router.push(`/Human/${employeeId}`);
   };
 
   return (
@@ -124,7 +125,7 @@ function DataTable<TData>({
             table.getRowModel().rows.map((row) => (
               <TableRow
                 key={row.id}
-                onClick={() => handleRowClick(row.id)}
+                onClick={() => handleRowClick((row.original as Employee).id)}
                 className="cursor-pointer"
               >
                 {row.getVisibleCells().map((cell) => (
@@ -194,11 +195,15 @@ const Index = () => {
     });
   };
 
-  const filteredData = applyFilters(employeeData);
+  const filteredData = useMemo(() => applyFilters(employeeData), [employeeData, filters]);
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-  const paginatedData = filteredData.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+  const paginatedData = useMemo(
+    () =>
+      filteredData.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+      ),
+    [filteredData, currentPage]
   );
 
   const handleFilterChange = (column: string, value: string) => {
@@ -269,13 +274,11 @@ const Index = () => {
               />
             </PaginationItem>
             {Array.from({ length: totalPages }, (_, index) => (
-              <PaginationItem key={index}>
+              <PaginationItem key={index + 1}>
                 <PaginationLink
                   href="#"
                   onClick={() => handlePageChange(index + 1)}
-                  className={
-                    currentPage === index + 1 ? "bg-blue-500 text-white" : ""
-                  }
+                  className={currentPage === index + 1 ? "font-bold" : ""}
                 >
                   {index + 1}
                 </PaginationLink>

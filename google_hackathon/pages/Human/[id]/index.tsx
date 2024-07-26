@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/Select";
+import { DatePickerDemo } from "@/components/ui/DatePickerDemo";
 
 const ProfilePage = () => {
   const router = useRouter();
@@ -13,8 +14,17 @@ const ProfilePage = () => {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [isEditing, setIsEditing] = useState<boolean>(false);
-  const [formData, setFormData] = useState<any>({});
+  const [emailError, setEmailError] = useState<string | null>(null); // State for email validation error
+  const [formData, setFormData] = useState<any>({
+    id: '',
+    name: '',
+    position: '',
+    department: '',
+    email: '',
+    phone: '',
+    hireDate: '',
+    status: ''
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -24,8 +34,19 @@ const ProfilePage = () => {
           const result = await response.json();
 
           if (response.ok) {
-            setData(result);
-            setFormData(result);
+            const mappedData = {
+              id: result[0],
+              name: result[1],
+              position: result[2],
+              department: result[3],
+              email: result[4],
+              phone: result[5],
+              hireDate: new Date(result[6]),
+              status: result[7]
+            };
+
+            setData(mappedData);
+            setFormData(mappedData);
           } else {
             setError(result.error || "An error occurred");
           }
@@ -39,6 +60,13 @@ const ProfilePage = () => {
 
     fetchData();
   }, [id]);
+
+  const formatDate = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -55,19 +83,40 @@ const ProfilePage = () => {
     });
   };
 
+  const handleDateChange = (date: Date) => {
+    setFormData({
+      ...formData,
+      hireDate: date,
+    });
+  };
+
+  const validateEmail = (email: string) => {
+    return email.endsWith("@gmail.com");
+  };
+
   const handleSave = async () => {
+    if (!validateEmail(formData.email)) {
+      setEmailError("Email must end with @gmail.com"); // Set email error message
+      return;
+    }
+
+    // Clear email error message if validation passes
+    setEmailError(null);
+
     try {
-      const response = await fetch(`/api/employees?id=${id}`, {
+      const response = await fetch('/api/updateEmployee', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          hireDate: formatDate(formData.hireDate),
+        }),
       });
 
       if (response.ok) {
         setData(formData);
-        setIsEditing(false);
       } else {
         const result = await response.json();
         setError(result.error || "Failed to save data");
@@ -77,96 +126,83 @@ const ProfilePage = () => {
     }
   };
 
-  if (loading) return <p>Loading...</p>;
-  if (error) return <p>Error: {error}</p>;
-
   return (
     <div>
-      <Header Title={`${data?.[1] || "Employee"}'s Profile Page`} />
-      {data ? (
+      <Header Title={`${data?.name || "Employee"}'s Profile Page`} />
+      {loading ? (
+        <div className="fixed inset-0 flex items-center justify-center bg-white">
+          <div className="relative flex justify-center items-center">
+            <div className="absolute animate-spin rounded-full h-32 w-32 border-t-4 border-b-4 border-purple-500"></div>
+            <img src="https://www.svgrepo.com/show/509001/avatar-thinking-9.svg" className="rounded-full h-28 w-28" />
+          </div>
+        </div>
+      ) : data ? (
         <Card className="max-w-[500px] w-full mx-auto my-5">
           <CardHeader>
-            <CardTitle className="text-center">{formData[1]}</CardTitle>
-            <CardDescription className="text-center">{formData[2]}</CardDescription>
+            <CardTitle className="text-center">{data.name}</CardTitle>
+            <CardDescription className="text-center">{data.position}</CardDescription>
           </CardHeader>
           <CardContent className="flex">
             <div className="w-full">
-              {isEditing ? (
-                <>
-                  <div className="flex space-x-5">
-                    <div className="w-1/2">
-                      <Label htmlFor="id">ID</Label>
-                      <Input name="id" value={formData[0]} onChange={handleInputChange} readOnly disabled />
-                      <Label htmlFor="name">Name</Label>
-                      <Input name="name" value={formData[1]} onChange={handleInputChange} />
-                      <Label htmlFor="position">Position</Label>
-                      <Select value={formData[2]} onValueChange={(value) => handleSelectChange("position", value)}>
-                        <SelectTrigger className="w-full">
-                          <SelectValue>{formData[2]}</SelectValue>
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Manager">Manager</SelectItem>
-                          <SelectItem value="Developer">Developer</SelectItem>
-                          <SelectItem value="Designer">Designer</SelectItem>
-                          <SelectItem value="Tester">Tester</SelectItem>
-                          <SelectItem value="HR">HR</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <Label htmlFor="department">Department</Label>
-                      <Select value={formData[3]} onValueChange={(value) => handleSelectChange("department", value)}>
-                        <SelectTrigger className="w-full">
-                          <SelectValue>{formData[3]}</SelectValue>
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Engineering">Engineering</SelectItem>
-                          <SelectItem value="Design">Design</SelectItem>
-                          <SelectItem value="QA">QA</SelectItem>
-                          <SelectItem value="HR">HR</SelectItem>
-                          <SelectItem value="Marketing">Marketing</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <Label htmlFor="email">Email</Label>
-                      <Input name="email" value={formData[4]} onChange={handleInputChange} />
-                    </div>
-                    <div className="w-1/2">
-                      <Label htmlFor="phone">Phone Number</Label>
-                      <Input name="phone" value={formData[5]} onChange={handleInputChange} />
-                      <Label htmlFor="hireDate">Hire Date</Label>
-                      <Input name="hireDate" value={new Date(formData[6]).toLocaleDateString()} onChange={handleInputChange} />
-                      <Label htmlFor="status">Status</Label>
-                      <Select value={formData[7]} onValueChange={(value) => handleSelectChange("status", value)}>
-                        <SelectTrigger className="w-full">
-                          <SelectValue>{formData[7]}</SelectValue>
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Active">Active</SelectItem>
-                          <SelectItem value="On Leave">On Leave</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <p><strong>ID:</strong> {data[0]}</p>
-                  <p><strong>Department:</strong> {data[3]}</p>
-                  <p><strong>Email:</strong> {data[4]}</p>
-                  <p><strong>Phone Number:</strong> {data[5]}</p>
-                  <p><strong>Hire Date:</strong> {new Date(data[6]).toLocaleDateString()}</p>
-                  <p><strong>Status:</strong> {data[7]}</p>
-                </>
-              )}
+              <div className="flex space-x-5">
+                <div className="w-1/2">
+                  <Label htmlFor="id">ID</Label>
+                  <Input name="id" value={formData.id} onChange={handleInputChange} readOnly disabled />
+                  <Label htmlFor="name">Name</Label>
+                  <Input name="name" value={formData.name} onChange={handleInputChange} />
+                  <Label htmlFor="position">Position</Label>
+                  <Select value={formData.position} onValueChange={(value) => handleSelectChange("position", value)}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue>{formData.position}</SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Manager">Manager</SelectItem>
+                      <SelectItem value="Developer">Developer</SelectItem>
+                      <SelectItem value="Designer">Designer</SelectItem>
+                      <SelectItem value="Tester">Tester</SelectItem>
+                      <SelectItem value="HR">HR</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Label htmlFor="department">Department</Label>
+                  <Select value={formData.department} onValueChange={(value) => handleSelectChange("department", value)}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue>{formData.department}</SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Engineering">Engineering</SelectItem>
+                      <SelectItem value="Design">Design</SelectItem>
+                      <SelectItem value="QA">QA</SelectItem>
+                      <SelectItem value="HR">HR</SelectItem>
+                      <SelectItem value="Marketing">Marketing</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Label htmlFor="email">Email</Label>
+                  <Input name="email" value={formData.email} onChange={handleInputChange} />
+                  {emailError && <p className="text-red-500 text-sm mt-1">{emailError}</p>} {/* Show email error message */}
+                </div>
+                <div className="w-1/2">
+                  <Label htmlFor="phone">Phone Number</Label>
+                  <Input name="phone" value={formData.phone} onChange={handleInputChange} />
+                  <Label htmlFor="hireDate">Hire Date</Label>
+                  <DatePickerDemo onDateChange={handleDateChange} selectedDate={formData.hireDate} />
+                  <Label htmlFor="status">Status</Label>
+                  <Select value={formData.status} onValueChange={(value) => handleSelectChange("status", value)}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue>{formData.status}</SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Active">Active</SelectItem>
+                      <SelectItem value="On Leave">On Leave</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </div>
           </CardContent>
           <CardFooter>
-            {isEditing ? (
-              <div className="flex justify-end space-x-2 w-full">
-                <Button variant={"destructive"} onClick={handleSave}>Save</Button>
-                <Button onClick={() => setIsEditing(false)}>Cancel</Button>
-              </div>
-            ) : (
-              <Button onClick={() => setIsEditing(true)}>Edit</Button>
-            )}
+            <div className="flex justify-end space-x-2 w-full">
+              <Button variant={"destructive"} onClick={handleSave}>Save</Button>
+            </div>
           </CardFooter>
         </Card>
       ) : (
