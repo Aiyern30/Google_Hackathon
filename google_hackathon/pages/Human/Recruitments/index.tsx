@@ -110,21 +110,24 @@ function DataTable<TData extends Recruitment>({
               <TableRow>
                 {headerGroup.headers.map((header) => (
                   <TableCell key={header.id} className="p-2">
-                    <input
-                      id={header.id}
-                      type="text"
-                      className="block w-full border-gray-300 rounded-md shadow-sm text-xs p-3"
-                      placeholder={`Filter ${header.column.columnDef.header}`}
-                      onChange={(e) =>
-                        onFilterChange(header.column.id, e.target.value)
-                      }
-                    />
+                    {header.column.id === "cvLink" ? null : ( // Skip filter for cvLink
+                      <input
+                        id={header.id}
+                        type="text"
+                        className="block w-full border-gray-300 rounded-md shadow-sm text-xs p-3"
+                        placeholder={`Filter ${header.column.columnDef.header}`}
+                        onChange={(e) =>
+                          onFilterChange(header.column.id, e.target.value)
+                        }
+                      />
+                    )}
                   </TableCell>
                 ))}
               </TableRow>
             </React.Fragment>
           ))}
         </TableHeader>
+
         <TableBody>
           {table.getRowModel().rows?.length ? (
             table.getRowModel().rows.map((row) => (
@@ -193,6 +196,10 @@ const Index = () => {
     return employeeData.filter((employee) => {
       return Object.entries(filters).every(([column, value]) => {
         const columnValue = (employee as any)[column] as string;
+        // Skip filtering for 'cvLink'
+        if (column === "cvLink") {
+          return true; // Always return true for cvLink to exclude it from filtering
+        }
         return columnValue.toLowerCase().includes(value.toLowerCase());
       });
     });
