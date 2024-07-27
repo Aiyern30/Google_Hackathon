@@ -1,26 +1,36 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
+import type { NextApiRequest, NextApiResponse } from "next";
 
-type Recruitment = {
-  timestamp: string;
-  email: string;
-  name: string;
-  position: string;
-  department: string;
-  contactEmail: string;
-  phoneNumber: string;
-  previousExperience: string;
-  skills: string;
-};
-
-const handler = async (req: NextApiRequest, res: NextApiResponse) => {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   try {
-    const response = await fetch("https://script.google.com/macros/s/AKfycbxh50PciAnzA6gFpurLwsc8QgGuOAqO5ym_WHo2DZApd4_VDK3CGApKtML_T6a1Gvqmdg/exec");
-    const data: Recruitment[] = await response.json();
+    const response = await fetch(
+      "https://script.google.com/macros/s/AKfycbzaM1WbUGnJNXnVJM1z2eQEbaz7mNzgsEertTQGB16MfWOYsnvvVT33bWEhWd-Lh40a5w/exec"
+    );
 
+    const text = await response.text(); // Get the raw response text
+    console.log("Raw response text:", text); // Log the raw response text
+
+    if (!response.ok) {
+      throw new Error(
+        `Network response was not ok. Status: ${response.status}`
+      );
+    }
+
+    const data = JSON.parse(text); // Parse the raw text as JSON
+    console.log("API data:", data); // Log the parsed data
     res.status(200).json(data);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch data' });
+    if (error instanceof SyntaxError) {
+      console.error("Syntax Error:", error.message);
+      res.status(500).json({ error: "Invalid JSON response" });
+    } else if (error instanceof Error) {
+      console.error("API Error:", error.message);
+      res.status(500).json({ error: "Internal Server Error" });
+    } else {
+      console.error("Unexpected Error:", error);
+      res.status(500).json({ error: "Unexpected Internal Server Error" });
+    }
   }
-};
-
-export default handler;
+}

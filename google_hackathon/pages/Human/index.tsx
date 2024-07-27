@@ -198,7 +198,10 @@ const Index = () => {
     });
   };
 
-  const filteredData = useMemo(() => applyFilters(employeeData), [employeeData, filters]);
+  const filteredData = useMemo(
+    () => applyFilters(employeeData),
+    [employeeData, filters]
+  );
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const paginatedData = useMemo(
     () =>
@@ -221,7 +224,10 @@ const Index = () => {
       <div className="fixed inset-0 flex items-center justify-center bg-white">
         <div className="relative flex justify-center items-center">
           <div className="absolute animate-spin rounded-full h-32 w-32 border-t-4 border-b-4 border-purple-500"></div>
-          <img src="https://www.svgrepo.com/show/509001/avatar-thinking-9.svg" className="rounded-full h-28 w-28" />
+          <img
+            src="https://www.svgrepo.com/show/509001/avatar-thinking-9.svg"
+            className="rounded-full h-28 w-28"
+          />
         </div>
       </div>
     );
@@ -278,18 +284,15 @@ const Index = () => {
         />
         <Pagination>
           <PaginationContent>
-          <PaginationPrevious
-  onClick={() => handlePageChange(currentPage - 1)}
->
-  <Button>Previous</Button>
-</PaginationPrevious>
-<PaginationItem>{`Page ${currentPage} of ${totalPages}`}</PaginationItem>
-<PaginationNext
-  onClick={() => handlePageChange(currentPage + 1)}
->
-  <Button>Next</Button>
-</PaginationNext>
-
+            <PaginationPrevious
+              onClick={() => handlePageChange(currentPage - 1)}
+            >
+              <Button>Previous</Button>
+            </PaginationPrevious>
+            <PaginationItem>{`Page ${currentPage} of ${totalPages}`}</PaginationItem>
+            <PaginationNext onClick={() => handlePageChange(currentPage + 1)}>
+              <Button>Next</Button>
+            </PaginationNext>
           </PaginationContent>
         </Pagination>
       </div>
