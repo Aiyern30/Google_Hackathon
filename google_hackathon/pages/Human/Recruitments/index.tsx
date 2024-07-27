@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useEffect, useMemo, useState } from "react";
 import {
   ColumnDef,
@@ -42,7 +40,6 @@ type Recruitment = {
   status: string;
 };
 
-
 const columns: ColumnDef<Recruitment>[] = [
   { accessorKey: "emailAddress", header: "Email Address" },
   { accessorKey: "fullName", header: "Full Name" },
@@ -70,7 +67,6 @@ const columns: ColumnDef<Recruitment>[] = [
       );
     },
   }
-  
 ];
 
 const getNewEmployeeCount = (data: Recruitment[]) => {
@@ -165,20 +161,11 @@ const Index = () => {
   const [employeeData, setEmployeeData] = useState<Recruitment[]>([]);
   const [filters, setFilters] = useState<{ [key: string]: string }>({});
   const [loading, setLoading] = useState<boolean>(true);
-  const [selectedStatus, setSelectedStatus] = useState<string>("All");
   const [selectedRecruitment, setSelectedRecruitment] = useState<Recruitment | null>(null);
-  const itemsPerPage = 5;
-
-  const handlePageChange = (pageNumber: number) => {
-    if (pageNumber >= 1 && pageNumber <= totalPages) {
-      setCurrentPage(pageNumber);
-    }
-  };
-
   const [salary, setSalary] = useState("");
+  const [activeTab, setActiveTab] = useState<string>("pending"); // New state for active tab
 
-  
-
+  const itemsPerPage = 5;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -208,19 +195,17 @@ const Index = () => {
     fetchData();
   }, []);
 
+  // Filter data based on the selected tab
   const filteredData = useMemo(() => {
     return employeeData.filter((employee) => {
-      const statusFilter = selectedStatus === "All" || employee.status === selectedStatus;
+      const matchesStatus = employee.status.toLowerCase() === activeTab.toLowerCase() || activeTab === 'all';
       const otherFilters = Object.entries(filters).every(([column, value]) => {
         const columnValue = (employee as any)[column] as string;
-        if (column === "cvLink") {
-          return true;
-        }
         return columnValue.toLowerCase().includes(value.toLowerCase());
       });
-      return statusFilter && otherFilters;
+      return matchesStatus && otherFilters;
     });
-  }, [employeeData, filters, selectedStatus]);
+  }, [employeeData, filters, activeTab]);
 
   const currentTableData = useMemo(() => {
     const firstPageIndex = (currentPage - 1) * itemsPerPage;
@@ -238,173 +223,182 @@ const Index = () => {
     setCurrentPage(1);
   };
 
-  const handleTabChange = (status: string) => {
-    setSelectedStatus(status);
-    setCurrentPage(1);
-  };
-
   const handleRowClick = (recruitment: Recruitment) => {
     setSelectedRecruitment(recruitment);
   };
 
   const handleApprove = () => {
-    // Handle approve logic here
     if (selectedRecruitment) {
-      // Perform the approval action
       console.log("Approved:", selectedRecruitment);
+      setSelectedRecruitment(null); // Close dialog
     }
-    setSelectedRecruitment(null); // Close dialog
   };
 
   const handleReject = () => {
-    // Handle reject logic here
     if (selectedRecruitment) {
-      // Perform the rejection action
       console.log("Rejected:", selectedRecruitment);
+      setSelectedRecruitment(null); // Close dialog
     }
+  };
+
+  const handleSetPending = () => {
+    if (selectedRecruitment) {
+      console.log("Changed to Pending:", selectedRecruitment);
+      setSelectedRecruitment(null); // Close dialog
+    }
+  };
+
+  const handleDialogClose = () => {
     setSelectedRecruitment(null); // Close dialog
+    setSalary(""); // Reset salary input
   };
 
   return (
     <div>
       <Header Title="Recruitment Records" />
       <div className="container mx-auto p-5">
-        <div className="container flex justify-center items-center p-5">
-          <div className="flex space-x-3">
-            <Card className="min-w-64">
-              <CardHeader>
-                <CardTitle className="text-center">Total Applications</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-5xl text-center">{employeeData.length}</div>
-              </CardContent>
-            </Card>
-            <Card className="min-w-64">
-              <CardHeader>
-                <CardTitle className="text-center">New Employees</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-5xl text-center">{getNewEmployeeCount(employeeData)}</div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+        {loading ? (
+          <div>Loading...</div>
+        ) : (
+          <>
+            <Tabs defaultValue="pending">
+              <TabsList>
+                <TabsTrigger value="pending" onClick={() => setActiveTab("Pending")}>Pending</TabsTrigger>
+                <TabsTrigger value="in-progress" onClick={() => setActiveTab("In Progress")}>In Progress</TabsTrigger>
+                <TabsTrigger value="approved" onClick={() => setActiveTab("Approved")}>Approved</TabsTrigger>
+                <TabsTrigger value="rejected" onClick={() => setActiveTab("Rejected")}>Rejected</TabsTrigger>
+              </TabsList>
+            </Tabs>
 
-        <div className="flex flex-col">
-          <Tabs defaultValue="All" className="mb-4">
-            <TabsList>
-              <TabsTrigger value="All" onClick={() => handleTabChange("All")}>All</TabsTrigger>
-              <TabsTrigger value="Approved" onClick={() => handleTabChange("Approved")}>Approved</TabsTrigger>
-              <TabsTrigger value="Rejected" onClick={() => handleTabChange("Rejected")}>Rejected</TabsTrigger>
-            </TabsList>
-            <TabsContent value="All" />
-          </Tabs>
+            <DataTable
+              columns={columns}
+              data={currentTableData}
+              onRowClick={handleRowClick}
+              onFilterChange={handleFilterChange}
+            />
+            <Pagination className="flex justify-center mt-4 list-none">
+              {currentPage > 1 && (
+                <PaginationPrevious
+                  onClick={() => setCurrentPage(currentPage - 1)}
+                  className="px-4 py-2 mx-1 border rounded-md hover:bg-gray-200 cursor-pointer"
+                >
+                  Previous
+                </PaginationPrevious>
+              )}
+              {Array.from({ length: totalPages }, (_, index) => (
+                <PaginationItem
+                  key={index}
+                  onClick={() => setCurrentPage(index + 1)}
+                  className={`px-4 py-2 mx-1 border rounded-md cursor-pointer ${
+                    index + 1 === currentPage ? "bg-black text-white" : "hover:bg-gray-200"
+                  }`}
+                >
+                  {index + 1}
+                </PaginationItem>
+              ))}
+              {currentPage < totalPages && (
+                <PaginationNext
+                  onClick={() => setCurrentPage(currentPage + 1)}
+                  className="px-4 py-2 mx-1 border rounded-md hover:bg-gray-200 cursor-pointer"
+                >
+                  Next
+                </PaginationNext>
+              )}
+            </Pagination>
+          </>
+        )}
+      </div>
 
-          <DataTable
-            columns={columns}
-            data={currentTableData}
-            onRowClick={handleRowClick}
-            onFilterChange={handleFilterChange}
-          />
-<Pagination className="flex justify-center mt-4 list-none"> {/* Ensure `list-none` class is here */}
-  <PaginationPrevious
-    onClick={() => handlePageChange(currentPage - 1)}
-    className={`px-4 py-2 mx-1 border rounded-md ${currentPage === 1 ? "hidden" : ""} hover:bg-gray-200 cursor-pointer`}
-  >
-    Previous
-  </PaginationPrevious>
-
-  {Array.from({ length: totalPages }, (_, index) => (
-    <PaginationItem
-      key={index}
-      onClick={() => handlePageChange(index + 1)}
-      className={`px-4 py-2 mx-1 border rounded-md cursor-pointer ${index + 1 === currentPage ? "bg-black text-white " : "hover:bg-gray-200"}`}
-    >
-      {index + 1}
-    </PaginationItem>
-  ))}
-
-  <PaginationNext
-    onClick={() => handlePageChange(currentPage + 1)}
-    className={`px-4 py-2 mx-1 border rounded-md ${currentPage === totalPages ? "hidden" : ""} hover:bg-gray-200 cursor-pointer`}
-  >
-    Next
-  </PaginationNext>
-</Pagination>
-
-
-        </div>
-
-        <Dialog open={!!selectedRecruitment} onOpenChange={() => setSelectedRecruitment(null)}>
+      {/* Dialog for Approving or Rejecting a Recruitment */}
+<Dialog open={!!selectedRecruitment} onOpenChange={handleDialogClose}>
   <DialogContent>
     <DialogHeader>
-      <DialogTitle>Recruitment Details</DialogTitle>
+      <DialogTitle>{selectedRecruitment?.fullName}</DialogTitle>
     </DialogHeader>
-    {selectedRecruitment && (
-      <div>
-        <p><strong>Email Address:</strong> {selectedRecruitment.emailAddress}</p>
-        <p><strong>Full Name:</strong> {selectedRecruitment.fullName}</p>
-        <p><strong>CV Link:</strong> <a href={selectedRecruitment.cvLink} target="_blank" rel="noopener noreferrer">View CV</a></p>
+    <Tabs defaultValue={
+      selectedRecruitment?.status === "Pending" ? "in-progress" :
+      selectedRecruitment?.status === "In Progress" ? "approve" :
+      selectedRecruitment?.status === "Rejected" ? "pending" : "approve" // Default to "approve" if none match
+    }>
+      {selectedRecruitment?.status === "Pending" && (
+        <TabsList>
+          <TabsTrigger value="in-progress">In Progress</TabsTrigger>
+          <TabsTrigger value="reject">Reject</TabsTrigger>
+        </TabsList>
+      )}
+      {selectedRecruitment?.status === "In Progress" && (
+        <TabsList>
+          <TabsTrigger value="approve">Approve</TabsTrigger>
+          <TabsTrigger value="reject">Reject</TabsTrigger>
+        </TabsList>
+      )}
+      {selectedRecruitment?.status === "Rejected" && (
+        <TabsList>
+          <TabsTrigger value="pending">Set to Pending</TabsTrigger>
+        </TabsList>
+      )}
 
-        {/* Tabs for Approve and Reject */}
-        <Tabs defaultValue="approve" className="mt-4">
-          <TabsList>
-            <TabsTrigger value="approve">Approve</TabsTrigger>
-            <TabsTrigger value="reject">Reject</TabsTrigger>
-          </TabsList>
-          <TabsContent value="approve">
-            {/* Approve Content */}
-            <div>
-              <div className="mt-4">
-                <label className="block mb-2" htmlFor="salary">Salary:</label>
-                <input
-                  type="number"
-                  id="salary"
-                  value={salary}
-                  onChange={(e) => setSalary(e.target.value)}
-                  className="w-full border rounded-md p-2"
-                  placeholder="Enter proposed salary"
-                />
-              </div>
-              <p>Approval Email Format:</p>
-              <textarea 
-                className="w-full border rounded-md p-2"
-                rows={4}
-                placeholder={`Dear ${selectedRecruitment.fullName},\n\nCongratulations! We are pleased to inform you that you have been approved for the position of ${selectedRecruitment.positionAppliedFor} with a proposed salary of ${salary}.\n\nBest regards,\nYour Company Name`}
-              />
-            </div>
-            <div className="flex justify-end mt-4">
-              <Button onClick={handleApprove} className="mr-2">Approve</Button>
-              <Button onClick={() => setSelectedRecruitment(null)}>Cancel</Button>
-            </div>
-          </TabsContent>
-          <TabsContent value="reject">
-            {/* Reject Content */}
-            <div>
-              <p>Rejection Email Format:</p>
-              <textarea 
-                className="w-full border rounded-md p-2"
-                rows={4}
-                placeholder={`Dear ${selectedRecruitment.fullName},\n\nThank you for your application for the position of ${selectedRecruitment.positionAppliedFor}. Unfortunately, we are unable to move forward with your application at this time.\n\nBest regards,\nYour Company Name`}
-              />
-            </div>
-            <div className="flex justify-end mt-4">
-              <Button onClick={handleReject} className="mr-2">Reject</Button>
-              <Button onClick={() => setSelectedRecruitment(null)}>Cancel</Button>
-            </div>
-          </TabsContent>
-        </Tabs>
-      </div>
-    )}
+      {/* In Progress Tab */}
+      {selectedRecruitment?.status === "Pending" && (
+        <TabsContent value="in-progress">
+          <p>Request a meeting with the candidate.</p>
+          <div className="flex justify-end mt-4">
+            <Button onClick={() => console.log("Meeting requested")}>
+              Request Meeting
+            </Button>
+          </div>
+        </TabsContent>
+      )}
+
+      {/* Reject Tab for Pending */}
+      {selectedRecruitment?.status === "Pending" && (
+        <TabsContent value="reject">
+          <p>Unfortunately, you have been rejected.</p>
+          <div className="flex justify-end mt-4">
+            <Button variant="destructive" onClick={handleReject}>
+              Reject
+            </Button>
+          </div>
+        </TabsContent>
+      )}
+
+      {/* Approve Tab for In Progress */}
+      {selectedRecruitment?.status === "In Progress" && (
+        <TabsContent value="approve">
+          <p>Approve this recruitment.</p>
+          <div className="flex justify-end mt-4">
+            <Button onClick={handleApprove}>Approve</Button>
+          </div>
+        </TabsContent>
+      )}
+
+      {/* Reject Tab for In Progress */}
+      {selectedRecruitment?.status === "In Progress" && (
+        <TabsContent value="reject">
+          <p>Reject this recruitment.</p>
+          <div className="flex justify-end mt-4">
+            <Button variant="destructive" onClick={handleReject}>
+              Reject
+            </Button>
+          </div>
+        </TabsContent>
+      )}
+
+      {/* Set to Pending Tab for Rejected */}
+      {selectedRecruitment?.status === "Rejected" && (
+        <TabsContent value="pending">
+          <p>Set this recruitment back to pending.</p>
+          <div className="flex justify-end mt-4">
+            <Button onClick={handleSetPending}>Set to Pending</Button>
+          </div>
+        </TabsContent>
+      )}
+    </Tabs>
   </DialogContent>
 </Dialog>
 
-
-      </div>
     </div>
   );
 };
 
 export default Index;
-
-
