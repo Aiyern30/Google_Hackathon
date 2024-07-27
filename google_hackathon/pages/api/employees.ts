@@ -1,6 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   try {
     const { id } = req.query;
     const response = await fetch(
@@ -8,7 +11,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     );
 
     if (!response.ok) {
-      throw new Error(`Network response was not ok. Status: ${response.status}`);
+      throw new Error(
+        `Network response was not ok. Status: ${response.status}`
+      );
     }
 
     const text = await response.text();
@@ -27,7 +32,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (id) {
       // Filter data by the provided ID
-      const employee = data.find((item: any) => item[0].toString() === id.toString());
+      const employee = data.find(
+        (item: any) => item[0].toString() === id.toString()
+      );
       console.log("Filtered employee:", employee);
       if (employee) {
         res.status(200).json(employee);
