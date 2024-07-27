@@ -1,92 +1,109 @@
-import React, { useEffect, useState } from 'react';
-import Header from "@/components/ui/HR Components/Header";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/Card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { useState } from "react";
+import { useRouter } from "next/router";
+import { Inter } from "next/font/google";
 
-const RecruitmentPage = () => {
-  const [data, setData] = useState<any[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+const inter = Inter({ subsets: ["latin"] });
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch('/api/recruitments');
-        const result = await response.json();
+export default function Home() {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false); // Add loading state
+  const router = useRouter();
 
-        if (response.ok) {
-          setData(result);
-        } else {
-          setError(result.error || "An error occurred");
-        }
-      } catch (error) {
-        setError("Failed to fetch data");
-      } finally {
-        setLoading(false);
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+
+    // Clear any previous errors
+    setError("");
+    setLoading(true);
+
+    try {
+      const response = await fetch("/api/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        router.push("/Human/");
+      } else {
+        setError(data.error || "Invalid username or password.");
       }
-    };
-
-    fetchData();
-  }, []);
+    } catch (error) {
+      setError("An error occurred. Please try again.");
+    } finally {
+      setLoading(false); // Reset loading state
+    }
+  };
 
   return (
-    <div>
-      <Header Title="Recruitment Page" />
-      {loading ? (
-        <div className="fixed inset-0 flex items-center justify-center bg-white">
-          <div className="relative flex justify-center items-center">
-            <div className="absolute animate-spin rounded-full h-32 w-32 border-t-4 border-b-4 border-purple-500"></div>
-            <img src="https://www.svgrepo.com/show/509001/avatar-thinking-9.svg" className="rounded-full h-28 w-28" />
-          </div>
-        </div>
-      ) : error ? (
-        <div className="flex items-center justify-center">
-          <p className="text-red-500">{error}</p>
-        </div>
-      ) : (
-        <Card className="max-w-[800px] w-full mx-auto my-5">
+    <>
+      <div className="flex items-center justify-center h-screen">
+        <Card className="min-w-[400px] max-w-md p-4">
           <CardHeader>
-            <CardTitle className="text-center">Recruitment List</CardTitle>
+            <CardTitle className="text-center font-bold text-2xl">
+              Login Page
+            </CardTitle>
+            <CardDescription className="text-center text-sm">
+              for human resource management
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <table className="min-w-full bg-white">
-              <thead>
-                <tr>
-                  <th className="w-1/9 px-4 py-2">Timestamp</th>
-                  <th className="w-1/9 px-4 py-2">Email</th>
-                  <th className="w-1/9 px-4 py-2">Name</th>
-                  <th className="w-1/9 px-4 py-2">Position</th>
-                  <th className="w-1/9 px-4 py-2">Department</th>
-                  <th className="w-1/9 px-4 py-2">Contact Email</th>
-                  <th className="w-1/9 px-4 py-2">Phone Number</th>
-                  <th className="w-1/9 px-4 py-2">Previous Experience</th>
-                  <th className="w-1/9 px-4 py-2">Skills</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.map((recruitment, index) => (
-                  <tr key={index}>
-                    <td className="border px-4 py-2">{recruitment.timestamp}</td>
-                    <td className="border px-4 py-2">{recruitment.email}</td>
-                    <td className="border px-4 py-2">{recruitment.name}</td>
-                    <td className="border px-4 py-2">{recruitment.position}</td>
-                    <td className="border px-4 py-2">{recruitment.department}</td>
-                    <td className="border px-4 py-2">{recruitment.contactEmail}</td>
-                    <td className="border px-4 py-2">{recruitment.phoneNumber}</td>
-                    <td className="border px-4 py-2">{recruitment.previousExperience}</td>
-                    <td className="border px-4 py-2">{recruitment.skills}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <form className="space-y-4" onSubmit={handleSubmit}>
+              <div>
+                <label htmlFor="username" className="block text-sm font-medium">
+                  Username
+                </label>
+                <Input
+                  id="username"
+                  type="text"
+                  placeholder="Enter your username"
+                  className="mt-1"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium">
+                  Password
+                </label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="Enter your password"
+                  className="mt-1"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+              {error && <p className="text-red-500 text-center">{error}</p>}
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Logging in..." : "Login"}
+              </Button>
+            </form>
           </CardContent>
-          <CardFooter className="flex justify-end">
-            <Button variant="default">Add New Recruitment</Button>
+          <CardFooter className="text-center text-sm">
+            <p>Forgot your password?</p>
           </CardFooter>
         </Card>
-      )}
-    </div>
+      </div>
+    </>
   );
-};
-
-export default RecruitmentPage;
+}
