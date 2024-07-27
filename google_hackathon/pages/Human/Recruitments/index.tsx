@@ -60,6 +60,7 @@ const columns: ColumnDef<Recruitment>[] = [
       );
     },
   },
+  // {accessorKey:"status",header:"Status"}
 ];
 
 const getNewEmployeeCount = (data: Recruitment[]) => {
@@ -180,6 +181,7 @@ const Index = () => {
           previousWorkExperience: row["Previous Work Experience"],
           skills: row["Skills you have"],
           cvLink: row["Attach your CV"],
+          status: row["Status"],
         }));
         setEmployeeData(formattedData);
       } catch (error) {
@@ -223,11 +225,8 @@ const Index = () => {
 
   return (
     <div>
-      <Header Title="Recruitment Form Page"></Header>
+      <Header Title="Recruitment Records"></Header>
       <div className="container mx-auto p-5">
-        <h1 className="text-3xl font-bold mb-5 text-center">
-          Recruitment Records
-        </h1>
 
         <div className="container flex justify-center items-center p-5">
           <div className="flex space-x-3">
