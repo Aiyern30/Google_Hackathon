@@ -26,6 +26,8 @@ import {
 } from "@/components/ui/Pagination";
 import { useRouter } from "next/router";
 import Header from "@/components/ui/HR Components/Header";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/Dialog";
 
 type Recruitment = {
   timestamp: string;
@@ -37,10 +39,11 @@ type Recruitment = {
   previousWorkExperience: string;
   skills: string;
   cvLink: string;
+  status: string;
 };
 
+
 const columns: ColumnDef<Recruitment>[] = [
-  // { accessorKey: "timestamp", header: "Timestamp" },
   { accessorKey: "emailAddress", header: "Email Address" },
   { accessorKey: "fullName", header: "Full Name" },
   { accessorKey: "positionAppliedFor", header: "Position Applied For" },
@@ -52,15 +55,22 @@ const columns: ColumnDef<Recruitment>[] = [
     accessorKey: "cvLink",
     header: "CV Link",
     cell: (info) => {
-      const cvLink = info.getValue() as string; // Cast the value to string
+      const cvLink = info.getValue() as string;
       return (
-        <a href={cvLink} target="_blank" rel="noopener noreferrer">
-          View CV
-        </a>
+        <Button>
+          <a 
+            href={cvLink} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()} 
+          >
+            View CV
+          </a>
+        </Button>
       );
     },
-  },
-  // {accessorKey:"status",header:"Status"}
+  }
+  
 ];
 
 const getNewEmployeeCount = (data: Recruitment[]) => {
@@ -73,22 +83,19 @@ const getNewEmployeeCount = (data: Recruitment[]) => {
 function DataTable<TData extends Recruitment>({
   columns,
   data,
+  onRowClick,
   onFilterChange,
 }: {
   columns: ColumnDef<TData>[];
   data: TData[];
+  onRowClick: (row: TData) => void;
   onFilterChange: (column: string, value: string) => void;
 }) {
-  const router = useRouter();
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
-
-  const handleRowClick = (recruitmentId: string) => {
-    router.push(`/Recruitment/${recruitmentId}`);
-  };
 
   return (
     <div className="rounded-md border">
@@ -111,7 +118,7 @@ function DataTable<TData extends Recruitment>({
               <TableRow>
                 {headerGroup.headers.map((header) => (
                   <TableCell key={header.id} className="p-2">
-                    {header.column.id === "cvLink" ? null : ( // Skip filter for cvLink
+                    {header.column.id === "cvLink" ? null : (
                       <input
                         id={header.id}
                         type="text"
@@ -132,7 +139,7 @@ function DataTable<TData extends Recruitment>({
         <TableBody>
           {table.getRowModel().rows?.length ? (
             table.getRowModel().rows.map((row) => (
-              <TableRow key={row.id} className="cursor-pointer">
+              <TableRow key={row.id} className="cursor-pointer" onClick={() => onRowClick(row.original)}>
                 {row.getVisibleCells().map((cell) => (
                   <TableCell key={cell.id}>
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -158,6 +165,8 @@ const Index = () => {
   const [employeeData, setEmployeeData] = useState<Recruitment[]>([]);
   const [filters, setFilters] = useState<{ [key: string]: string }>({});
   const [loading, setLoading] = useState<boolean>(true);
+  const [selectedStatus, setSelectedStatus] = useState<string>("All");
+  const [selectedRecruitment, setSelectedRecruitment] = useState<Recruitment | null>(null);
   const itemsPerPage = 5;
 
   const handlePageChange = (pageNumber: number) => {
@@ -165,6 +174,11 @@ const Index = () => {
       setCurrentPage(pageNumber);
     }
   };
+
+  const [salary, setSalary] = useState("");
+
+  
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -196,16 +210,17 @@ const Index = () => {
 
   const filteredData = useMemo(() => {
     return employeeData.filter((employee) => {
-      return Object.entries(filters).every(([column, value]) => {
+      const statusFilter = selectedStatus === "All" || employee.status === selectedStatus;
+      const otherFilters = Object.entries(filters).every(([column, value]) => {
         const columnValue = (employee as any)[column] as string;
-        // Skip filtering for 'cvLink'
         if (column === "cvLink") {
-          return true; // Always return true for cvLink to exclude it from filtering
+          return true;
         }
         return columnValue.toLowerCase().includes(value.toLowerCase());
       });
+      return statusFilter && otherFilters;
     });
-  }, [employeeData, filters]);
+  }, [employeeData, filters, selectedStatus]);
 
   const currentTableData = useMemo(() => {
     const firstPageIndex = (currentPage - 1) * itemsPerPage;
@@ -220,90 +235,176 @@ const Index = () => {
       ...prevFilters,
       [column]: value,
     }));
-    setCurrentPage(1); // Reset to the first page when filters change
+    setCurrentPage(1);
+  };
+
+  const handleTabChange = (status: string) => {
+    setSelectedStatus(status);
+    setCurrentPage(1);
+  };
+
+  const handleRowClick = (recruitment: Recruitment) => {
+    setSelectedRecruitment(recruitment);
+  };
+
+  const handleApprove = () => {
+    // Handle approve logic here
+    if (selectedRecruitment) {
+      // Perform the approval action
+      console.log("Approved:", selectedRecruitment);
+    }
+    setSelectedRecruitment(null); // Close dialog
+  };
+
+  const handleReject = () => {
+    // Handle reject logic here
+    if (selectedRecruitment) {
+      // Perform the rejection action
+      console.log("Rejected:", selectedRecruitment);
+    }
+    setSelectedRecruitment(null); // Close dialog
   };
 
   return (
     <div>
-      <Header Title="Recruitment Records"></Header>
+      <Header Title="Recruitment Records" />
       <div className="container mx-auto p-5">
-
         <div className="container flex justify-center items-center p-5">
           <div className="flex space-x-3">
             <Card className="min-w-64">
               <CardHeader>
-                <CardTitle className="text-center">
-                  Total Applications
-                </CardTitle>
+                <CardTitle className="text-center">Total Applications</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-center font-mono text-5xl">
-                  {employeeData.length}
-                </p>
+                <div className="text-5xl text-center">{employeeData.length}</div>
               </CardContent>
             </Card>
-
             <Card className="min-w-64">
               <CardHeader>
-                <CardTitle className="text-center">New Applications</CardTitle>
+                <CardTitle className="text-center">New Employees</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-center font-mono text-5xl">
-                  {getNewEmployeeCount(employeeData)}
-                </p>
+                <div className="text-5xl text-center">{getNewEmployeeCount(employeeData)}</div>
               </CardContent>
             </Card>
-
-            {/* <Card className="min-w-64">
-              <CardHeader>
-                <CardTitle className="text-center">
-                  Pending Applications
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-center font-mono text-5xl">
-                  {
-                    employeeData.filter(
-                      (employee) => employee.status === "Pending"
-                    ).length
-                  }
-                </p>
-              </CardContent>
-            </Card> */}
           </div>
         </div>
 
-        {loading ? (
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
-          </div>
-        ) : (
-          <div>
-            <DataTable
-              columns={columns}
-              data={currentTableData}
-              onFilterChange={handleFilterChange}
-            />
-            <Pagination>
-              <PaginationContent>
-                <PaginationPrevious
-                  onClick={() => handlePageChange(currentPage - 1)}
-                >
-                  <Button>Previous</Button>
-                </PaginationPrevious>
-                <PaginationItem>{`Page ${currentPage} of ${totalPages}`}</PaginationItem>
-                <PaginationNext
-                  onClick={() => handlePageChange(currentPage + 1)}
-                >
-                  <Button>Next</Button>
-                </PaginationNext>
-              </PaginationContent>
-            </Pagination>
-          </div>
-        )}
+        <div className="flex flex-col">
+          <Tabs defaultValue="All" className="mb-4">
+            <TabsList>
+              <TabsTrigger value="All" onClick={() => handleTabChange("All")}>All</TabsTrigger>
+              <TabsTrigger value="Approved" onClick={() => handleTabChange("Approved")}>Approved</TabsTrigger>
+              <TabsTrigger value="Rejected" onClick={() => handleTabChange("Rejected")}>Rejected</TabsTrigger>
+            </TabsList>
+            <TabsContent value="All" />
+          </Tabs>
+
+          <DataTable
+            columns={columns}
+            data={currentTableData}
+            onRowClick={handleRowClick}
+            onFilterChange={handleFilterChange}
+          />
+<Pagination className="flex justify-center mt-4 list-none"> {/* Ensure `list-none` class is here */}
+  <PaginationPrevious
+    onClick={() => handlePageChange(currentPage - 1)}
+    className={`px-4 py-2 mx-1 border rounded-md ${currentPage === 1 ? "hidden" : ""} hover:bg-gray-200 cursor-pointer`}
+  >
+    Previous
+  </PaginationPrevious>
+
+  {Array.from({ length: totalPages }, (_, index) => (
+    <PaginationItem
+      key={index}
+      onClick={() => handlePageChange(index + 1)}
+      className={`px-4 py-2 mx-1 border rounded-md cursor-pointer ${index + 1 === currentPage ? "bg-black text-white " : "hover:bg-gray-200"}`}
+    >
+      {index + 1}
+    </PaginationItem>
+  ))}
+
+  <PaginationNext
+    onClick={() => handlePageChange(currentPage + 1)}
+    className={`px-4 py-2 mx-1 border rounded-md ${currentPage === totalPages ? "hidden" : ""} hover:bg-gray-200 cursor-pointer`}
+  >
+    Next
+  </PaginationNext>
+</Pagination>
+
+
+        </div>
+
+        <Dialog open={!!selectedRecruitment} onOpenChange={() => setSelectedRecruitment(null)}>
+  <DialogContent>
+    <DialogHeader>
+      <DialogTitle>Recruitment Details</DialogTitle>
+    </DialogHeader>
+    {selectedRecruitment && (
+      <div>
+        <p><strong>Email Address:</strong> {selectedRecruitment.emailAddress}</p>
+        <p><strong>Full Name:</strong> {selectedRecruitment.fullName}</p>
+        <p><strong>CV Link:</strong> <a href={selectedRecruitment.cvLink} target="_blank" rel="noopener noreferrer">View CV</a></p>
+
+        {/* Tabs for Approve and Reject */}
+        <Tabs defaultValue="approve" className="mt-4">
+          <TabsList>
+            <TabsTrigger value="approve">Approve</TabsTrigger>
+            <TabsTrigger value="reject">Reject</TabsTrigger>
+          </TabsList>
+          <TabsContent value="approve">
+            {/* Approve Content */}
+            <div>
+              <div className="mt-4">
+                <label className="block mb-2" htmlFor="salary">Salary:</label>
+                <input
+                  type="number"
+                  id="salary"
+                  value={salary}
+                  onChange={(e) => setSalary(e.target.value)}
+                  className="w-full border rounded-md p-2"
+                  placeholder="Enter proposed salary"
+                />
+              </div>
+              <p>Approval Email Format:</p>
+              <textarea 
+                className="w-full border rounded-md p-2"
+                rows={4}
+                placeholder={`Dear ${selectedRecruitment.fullName},\n\nCongratulations! We are pleased to inform you that you have been approved for the position of ${selectedRecruitment.positionAppliedFor} with a proposed salary of ${salary}.\n\nBest regards,\nYour Company Name`}
+              />
+            </div>
+            <div className="flex justify-end mt-4">
+              <Button onClick={handleApprove} className="mr-2">Approve</Button>
+              <Button onClick={() => setSelectedRecruitment(null)}>Cancel</Button>
+            </div>
+          </TabsContent>
+          <TabsContent value="reject">
+            {/* Reject Content */}
+            <div>
+              <p>Rejection Email Format:</p>
+              <textarea 
+                className="w-full border rounded-md p-2"
+                rows={4}
+                placeholder={`Dear ${selectedRecruitment.fullName},\n\nThank you for your application for the position of ${selectedRecruitment.positionAppliedFor}. Unfortunately, we are unable to move forward with your application at this time.\n\nBest regards,\nYour Company Name`}
+              />
+            </div>
+            <div className="flex justify-end mt-4">
+              <Button onClick={handleReject} className="mr-2">Reject</Button>
+              <Button onClick={() => setSelectedRecruitment(null)}>Cancel</Button>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
+    )}
+  </DialogContent>
+</Dialog>
+
+
       </div>
     </div>
   );
 };
 
 export default Index;
+
+
