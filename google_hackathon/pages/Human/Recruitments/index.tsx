@@ -52,29 +52,17 @@ const RecruitmentPage = () => {
             <table className="min-w-full bg-white">
               <thead>
                 <tr>
-                  <th className="w-1/9 px-4 py-2">Timestamp</th>
-                  <th className="w-1/9 px-4 py-2">Email</th>
-                  <th className="w-1/9 px-4 py-2">Name</th>
-                  <th className="w-1/9 px-4 py-2">Position</th>
-                  <th className="w-1/9 px-4 py-2">Department</th>
-                  <th className="w-1/9 px-4 py-2">Contact Email</th>
-                  <th className="w-1/9 px-4 py-2">Phone Number</th>
-                  <th className="w-1/9 px-4 py-2">Previous Experience</th>
-                  <th className="w-1/9 px-4 py-2">Skills</th>
+                  <th className="w-1/3 px-4 py-2">Name</th>
+                  <th className="w-1/3 px-4 py-2">Position</th>
+                  <th className="w-1/3 px-4 py-2">Department</th>
                 </tr>
               </thead>
               <tbody>
                 {data.map((recruitment, index) => (
                   <tr key={index}>
-                    <td className="border px-4 py-2">{recruitment.timestamp}</td>
-                    <td className="border px-4 py-2">{recruitment.email}</td>
                     <td className="border px-4 py-2">{recruitment.name}</td>
                     <td className="border px-4 py-2">{recruitment.position}</td>
                     <td className="border px-4 py-2">{recruitment.department}</td>
-                    <td className="border px-4 py-2">{recruitment.contactEmail}</td>
-                    <td className="border px-4 py-2">{recruitment.phoneNumber}</td>
-                    <td className="border px-4 py-2">{recruitment.previousExperience}</td>
-                    <td className="border px-4 py-2">{recruitment.skills}</td>
                   </tr>
                 ))}
               </tbody>
