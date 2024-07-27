@@ -27,49 +27,37 @@ import {
 import { useRouter } from "next/router";
 import Header from "@/components/ui/HR Components/Header";
 
-type Recruitment = {
+type TakeLeave = {
   timestamp: string;
   emailAddress: string;
   fullName: string;
-  positionAppliedFor: string;
-  departmentAppliedFor: string;
-  phoneNumber: string;
-  previousWorkExperience: string;
+  employeeID: string;
+  daysTotal: string;
+  startDate: string;
+  endDate: string;
   skills: string;
-  cvLink: string;
+  reason: string;
 };
 
-const columns: ColumnDef<Recruitment>[] = [
+const columns: ColumnDef<TakeLeave>[] = [
   // { accessorKey: "timestamp", header: "Timestamp" },
   { accessorKey: "emailAddress", header: "Email Address" },
   { accessorKey: "fullName", header: "Full Name" },
-  { accessorKey: "positionAppliedFor", header: "Position Applied For" },
-  { accessorKey: "departmentAppliedFor", header: "Department" },
-  { accessorKey: "phoneNumber", header: "Phone Number" },
-  { accessorKey: "previousWorkExperience", header: "Previous Work Experience" },
-  { accessorKey: "skills", header: "Skills" },
-  {
-    accessorKey: "cvLink",
-    header: "CV Link",
-    cell: (info) => {
-      const cvLink = info.getValue() as string; // Cast the value to string
-      return (
-        <a href={cvLink} target="_blank" rel="noopener noreferrer">
-          View CV
-        </a>
-      );
-    },
-  },
+  { accessorKey: "employeeID", header: "Employee ID" },
+  { accessorKey: "daysTotal", header: "Days in Total" },
+  { accessorKey: "startDate", header: "Leave Start Date" },
+  { accessorKey: "endDate", header: "Leave End Date" },
+  { accessorKey: "reason", header: "Reason" }
 ];
 
-const getNewEmployeeCount = (data: Recruitment[]) => {
+const getNewEmployeeCount = (data: TakeLeave[]) => {
   return data.filter((employee) => {
     const hireYear = new Date(employee.timestamp).getFullYear();
     return hireYear === 2024;
   }).length;
 };
 
-function DataTable<TData extends Recruitment>({
+function DataTable<TData extends TakeLeave>({
   columns,
   data,
   onFilterChange,
@@ -86,7 +74,7 @@ function DataTable<TData extends Recruitment>({
   });
 
   const handleRowClick = (recruitmentId: string) => {
-    router.push(`/Recruitment/${recruitmentId}`);
+    router.push(`/TakeLeave/${recruitmentId}`);
   };
 
   return (
@@ -151,7 +139,7 @@ function DataTable<TData extends Recruitment>({
 
 const Index = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [employeeData, setEmployeeData] = useState<Recruitment[]>([]);
+  const [employeeData, setEmployeeData] = useState<TakeLeave[]>([]);
   const [filters, setFilters] = useState<{ [key: string]: string }>({});
   const [loading, setLoading] = useState<boolean>(true);
   const itemsPerPage = 5;
@@ -165,18 +153,17 @@ const Index = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch("/api/recruitments");
+        const response = await fetch("/api/takeleave");
         const data = await response.json();
         const formattedData = data.map((row: any) => ({
           timestamp: row.Timestamp,
           emailAddress: row["Email address"],
-          fullName: row["Please enter your full name. "],
-          positionAppliedFor: row["Position Applied For:  "],
-          departmentAppliedFor: row["Department applied for"],
-          phoneNumber: row["Write your phone number"],
-          previousWorkExperience: row["Previous Work Experience"],
-          skills: row["Skills you have"],
-          cvLink: row["Attach your CV"],
+          fullName: row["Full Name"],
+          employeeID: row["Employee ID "],
+          daysTotal: row["How many days in total?"],
+          startDate: row["Leave Start Date"],
+          endDate: row["Leave End Date"],
+          reason: row["Reason"],
         }));
         setEmployeeData(formattedData);
       } catch (error) {
@@ -216,10 +203,10 @@ const Index = () => {
 
   return (
     <div>
-      <Header Title="Recruitment Form Page"></Header>
+      <Header Title="Take Leave Form Page"></Header>
       <div className="container mx-auto p-5">
         <h1 className="text-3xl font-bold mb-5 text-center">
-          Recruitment Records
+          Take Leave Records
         </h1>
 
         <div className="container flex justify-center items-center p-5">
