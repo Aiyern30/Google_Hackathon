@@ -6,7 +6,14 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { Button } from "@/components/ui/Button";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardDescription,
+  CardFooter,
+} from "@/components/ui/Card";
 import {
   Table,
   TableBody,
@@ -25,7 +32,19 @@ import {
 import { useRouter } from "next/router";
 import Header from "@/components/ui/HR Components/Header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/Dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/Dialog";
+import { Textarea } from "@/components/ui/Textarea";
+import { Label } from "@/components/ui/Label";
+import { Input } from "@/components/ui/Input";
+import { format } from "date-fns";
+
+import { DatePickerDemo } from "@/components/ui/DatePickerDemo";
 
 type Recruitment = {
   timestamp: string;
@@ -37,7 +56,7 @@ type Recruitment = {
   previousWorkExperience: string;
   skills: string;
   cvLink: string;
-  status: string;
+  status: "Pending" | "Approved" | "Rejected" | "In Progress";
 };
 
 const columns: ColumnDef<Recruitment>[] = [
@@ -55,26 +74,19 @@ const columns: ColumnDef<Recruitment>[] = [
       const cvLink = info.getValue() as string;
       return (
         <Button>
-          <a 
-            href={cvLink} 
-            target="_blank" 
+          <a
+            href={cvLink}
+            target="_blank"
             rel="noopener noreferrer"
-            onClick={(e) => e.stopPropagation()} 
+            onClick={(e) => e.stopPropagation()}
           >
             View CV
           </a>
         </Button>
       );
     },
-  }
+  },
 ];
-
-const getNewEmployeeCount = (data: Recruitment[]) => {
-  return data.filter((employee) => {
-    const hireYear = new Date(employee.timestamp).getFullYear();
-    return hireYear === 2024;
-  }).length;
-};
 
 function DataTable<TData extends Recruitment>({
   columns,
@@ -135,7 +147,11 @@ function DataTable<TData extends Recruitment>({
         <TableBody>
           {table.getRowModel().rows?.length ? (
             table.getRowModel().rows.map((row) => (
-              <TableRow key={row.id} className="cursor-pointer" onClick={() => onRowClick(row.original)}>
+              <TableRow
+                key={row.id}
+                className="cursor-pointer"
+                onClick={() => onRowClick(row.original)}
+              >
                 {row.getVisibleCells().map((cell) => (
                   <TableCell key={cell.id}>
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -161,11 +177,58 @@ const Index = () => {
   const [employeeData, setEmployeeData] = useState<Recruitment[]>([]);
   const [filters, setFilters] = useState<{ [key: string]: string }>({});
   const [loading, setLoading] = useState<boolean>(true);
-  const [selectedRecruitment, setSelectedRecruitment] = useState<Recruitment | null>(null);
+  const [selectedRecruitment, setSelectedRecruitment] =
+    useState<Recruitment | null>(null);
   const [salary, setSalary] = useState("");
-  const [activeTab, setActiveTab] = useState<string>("pending"); // New state for active tab
-
+  const [activeTab, setActiveTab] = useState<string>("pending");
+  const getCurrentTime = () => {
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, "0");
+    const minutes = String(now.getMinutes()).padStart(2, "0");
+    return `${hours}:${minutes}`;
+  };
   const itemsPerPage = 5;
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [time, setTime] = useState<string>(getCurrentTime());
+  useEffect(() => {
+    // Update the time state every minute to keep it current
+    const interval = setInterval(() => {
+      setTime(getCurrentTime());
+    }, 60000);
+
+    return () => clearInterval(interval); // Clean up the interval on component unmount
+  }, []);
+  const [message, setMessage] = useState<string>("");
+  const [rejectMessage, setRejectMessage] = useState<string>("");
+  const [approvedMessage, setApprovedMessage] = useState<string>("");
+
+  const handleDateChange = (date: Date) => {
+    setSelectedDate(date);
+  };
+
+  const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setTime(e.target.value);
+  };
+
+  const handleSalaryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSalary(e.target.value);
+  };
+
+  const handleMessageChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setMessage(e.target.value);
+  };
+
+  const handleRejectMessageChange = (
+    e: React.ChangeEvent<HTMLTextAreaElement>
+  ) => {
+    setRejectMessage(e.target.value);
+  };
+
+  const handleApproveMessageChange = (
+    e: React.ChangeEvent<HTMLTextAreaElement>
+  ) => {
+    setApprovedMessage(e.target.value);
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -198,7 +261,9 @@ const Index = () => {
   // Filter data based on the selected tab
   const filteredData = useMemo(() => {
     return employeeData.filter((employee) => {
-      const matchesStatus = employee.status.toLowerCase() === activeTab.toLowerCase() || activeTab === 'all';
+      const matchesStatus =
+        employee.status.toLowerCase() === activeTab.toLowerCase() ||
+        activeTab === "all";
       const otherFilters = Object.entries(filters).every(([column, value]) => {
         const columnValue = (employee as any)[column] as string;
         return columnValue.toLowerCase().includes(value.toLowerCase());
@@ -225,6 +290,15 @@ const Index = () => {
 
   const handleRowClick = (recruitment: Recruitment) => {
     setSelectedRecruitment(recruitment);
+    setMessage(
+      `Dear ${recruitment.fullName},\n\n\nYour regards,\nCompany Name`
+    );
+    setRejectMessage(
+      `Dear ${recruitment.fullName},\n\n\nYour regards,\nCompany Name`
+    );
+    setApprovedMessage(
+      `Dear ${recruitment.fullName},\n\n\nYour regards,\nCompany Name`
+    );
   };
 
   const handleApprove = () => {
@@ -234,10 +308,35 @@ const Index = () => {
     }
   };
 
-  const handleReject = () => {
-    if (selectedRecruitment) {
-      console.log("Rejected:", selectedRecruitment);
+  const handleRequestMeeting = (recruitment: Recruitment) => {
+    if (recruitment) {
+      console.log("Meeting requested for:", recruitment);
+      console.log("Date:", format(selectedDate, "yyyy-MM-dd"));
+      console.log("Time:", time);
+      console.log("Message:", message);
       setSelectedRecruitment(null); // Close dialog
+      setMessage(""); // Reset message input
+      setTime(""); // Reset time input
+    }
+  };
+  const handleApproveMeeting = (recruitment: Recruitment) => {
+    if (recruitment) {
+      console.log("Meeting requested for:", recruitment);
+      console.log("Date:", format(selectedDate, "yyyy-MM-dd"));
+      console.log("Time:", time);
+      console.log("Message:", message);
+      setSelectedRecruitment(null); // Close dialog
+      setMessage(""); // Reset message input
+      setTime(""); // Reset time input
+    }
+  };
+
+  const handleReject = (recruitment: Recruitment) => {
+    if (recruitment) {
+      console.log("Rejected:", recruitment);
+      console.log("Message:", message);
+      setSelectedRecruitment(null); // Close dialog
+      setRejectMessage(""); // Reset message input
     }
   };
 
@@ -256,18 +355,107 @@ const Index = () => {
   return (
     <div>
       <Header Title="Recruitment Records" />
+      <div className="container flex justify-center items-center p-5">
+        <div className="flex space-x-3">
+          <Card className="min-w-64">
+            <CardHeader>
+              <CardTitle className="text-center">Total Pending</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-center font-mono text-5xl">
+                {
+                  employeeData.filter(
+                    (employee) => employee.status === "Pending"
+                  ).length
+                }
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="min-w-64">
+            <CardHeader>
+              <CardTitle className="text-center">Total In Progress</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-center font-mono text-5xl">
+                {
+                  employeeData.filter(
+                    (employee) => employee.status === "In Progress"
+                  ).length
+                }
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="min-w-64">
+            <CardHeader>
+              <CardTitle className="text-center">Total Approved</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-center font-mono text-5xl">
+                {
+                  employeeData.filter(
+                    (employee) => employee.status === "Approved"
+                  ).length
+                }
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="min-w-64">
+            <CardHeader>
+              <CardTitle className="text-center">Total Rejected</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-center font-mono text-5xl">
+                {
+                  employeeData.filter(
+                    (employee) => employee.status === "Rejected"
+                  ).length
+                }
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
       <div className="container mx-auto p-5">
         {loading ? (
           <div>Loading...</div>
         ) : (
           <>
             <Tabs defaultValue="pending">
-              <TabsList>
-                <TabsTrigger value="pending" onClick={() => setActiveTab("Pending")}>Pending</TabsTrigger>
-                <TabsTrigger value="in-progress" onClick={() => setActiveTab("In Progress")}>In Progress</TabsTrigger>
-                <TabsTrigger value="approved" onClick={() => setActiveTab("Approved")}>Approved</TabsTrigger>
-                <TabsTrigger value="rejected" onClick={() => setActiveTab("Rejected")}>Rejected</TabsTrigger>
-              </TabsList>
+              <div className="flex">
+                <TabsList>
+                  <TabsTrigger
+                    value="pending"
+                    onClick={() => setActiveTab("Pending")}
+                  >
+                    Pending
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="in-progress"
+                    onClick={() => setActiveTab("In Progress")}
+                  >
+                    In Progress
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="approved"
+                    onClick={() => setActiveTab("Approved")}
+                  >
+                    Approved
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="rejected"
+                    onClick={() => setActiveTab("Rejected")}
+                  >
+                    Rejected
+                  </TabsTrigger>
+                </TabsList>
+                <Input
+                  type="email"
+                  id="email"
+                  placeholder="Email"
+                  className="min-w-96"
+                />
+              </div>
             </Tabs>
 
             <DataTable
@@ -290,7 +478,9 @@ const Index = () => {
                   key={index}
                   onClick={() => setCurrentPage(index + 1)}
                   className={`px-4 py-2 mx-1 border rounded-md cursor-pointer ${
-                    index + 1 === currentPage ? "bg-black text-white" : "hover:bg-gray-200"
+                    index + 1 === currentPage
+                      ? "bg-black text-white"
+                      : "hover:bg-gray-200"
                   }`}
                 >
                   {index + 1}
@@ -310,93 +500,242 @@ const Index = () => {
       </div>
 
       {/* Dialog for Approving or Rejecting a Recruitment */}
-<Dialog open={!!selectedRecruitment} onOpenChange={handleDialogClose}>
-  <DialogContent>
-    <DialogHeader>
-      <DialogTitle>{selectedRecruitment?.fullName}</DialogTitle>
-    </DialogHeader>
-    <Tabs defaultValue={
-      selectedRecruitment?.status === "Pending" ? "in-progress" :
-      selectedRecruitment?.status === "In Progress" ? "approve" :
-      selectedRecruitment?.status === "Rejected" ? "pending" : "approve" // Default to "approve" if none match
-    }>
-      {selectedRecruitment?.status === "Pending" && (
-        <TabsList>
-          <TabsTrigger value="in-progress">In Progress</TabsTrigger>
-          <TabsTrigger value="reject">Reject</TabsTrigger>
-        </TabsList>
-      )}
-      {selectedRecruitment?.status === "In Progress" && (
-        <TabsList>
-          <TabsTrigger value="approve">Approve</TabsTrigger>
-          <TabsTrigger value="reject">Reject</TabsTrigger>
-        </TabsList>
-      )}
-      {selectedRecruitment?.status === "Rejected" && (
-        <TabsList>
-          <TabsTrigger value="pending">Set to Pending</TabsTrigger>
-        </TabsList>
-      )}
+      <Dialog open={!!selectedRecruitment} onOpenChange={handleDialogClose}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{selectedRecruitment?.fullName} </DialogTitle>
+          </DialogHeader>
+          <Tabs
+            defaultValue={
+              selectedRecruitment?.status === "Pending"
+                ? "in-progress"
+                : selectedRecruitment?.status === "In Progress"
+                ? "approve"
+                : selectedRecruitment?.status === "Rejected"
+                ? "pending"
+                : "Approve" // Default to "approve" if none match
+            }
+          >
+            {selectedRecruitment?.status === "Pending" && (
+              <TabsList>
+                <TabsTrigger value="in-progress">In Progress</TabsTrigger>
+                <TabsTrigger value="reject">Reject</TabsTrigger>
+              </TabsList>
+            )}
+            {selectedRecruitment?.status === "In Progress" && (
+              <TabsList>
+                <TabsTrigger value="approve">Approve</TabsTrigger>
+                <TabsTrigger value="reject">Reject</TabsTrigger>
+              </TabsList>
+            )}
+            {selectedRecruitment?.status === "Rejected" && (
+              <TabsList>
+                <TabsTrigger value="pending">Set to Pending</TabsTrigger>
+              </TabsList>
+            )}
 
-      {/* In Progress Tab */}
-      {selectedRecruitment?.status === "Pending" && (
-        <TabsContent value="in-progress">
-          <p>Request a meeting with the candidate.</p>
-          <div className="flex justify-end mt-4">
-            <Button onClick={() => console.log("Meeting requested")}>
-              Request Meeting
-            </Button>
-          </div>
-        </TabsContent>
-      )}
+            {/* In Progress Tab */}
+            {selectedRecruitment?.status === "Pending" && (
+              <TabsContent value="in-progress">
+                <Label htmlFor="date">Date</Label>
+                <DatePickerDemo
+                  onDateChange={handleDateChange}
+                  selectedDate={selectedDate}
+                />
+                <Label htmlFor="time">Time</Label>
+                <Input
+                  type="time"
+                  value={time}
+                  onChange={handleTimeChange}
+                  placeholder="Select time"
+                />
+                <Label htmlFor="message-2">Your Message</Label>
+                <Textarea
+                  id="message-2"
+                  value={message}
+                  onChange={handleMessageChange}
+                  className="w-full min-h-32"
+                />
+                <div className="flex justify-end mt-4">
+                  <Button
+                    onClick={() => handleRequestMeeting(selectedRecruitment)}
+                  >
+                    Request Meeting
+                  </Button>
+                </div>
+              </TabsContent>
+            )}
 
-      {/* Reject Tab for Pending */}
-      {selectedRecruitment?.status === "Pending" && (
-        <TabsContent value="reject">
-          <p>Unfortunately, you have been rejected.</p>
-          <div className="flex justify-end mt-4">
-            <Button variant="destructive" onClick={handleReject}>
-              Reject
-            </Button>
-          </div>
-        </TabsContent>
-      )}
+            {selectedRecruitment?.status === "Pending" && (
+              <TabsContent value="reject">
+                <Label htmlFor="message-reject">Your Message</Label>
+                <Textarea
+                  id="message-reject"
+                  value={rejectMessage}
+                  onChange={handleRejectMessageChange}
+                  className="w-full min-h-32"
+                />
+                <div className="flex justify-end mt-4">
+                  <Button onClick={() => handleReject(selectedRecruitment)}>
+                    Reject
+                  </Button>
+                </div>
+              </TabsContent>
+            )}
 
-      {/* Approve Tab for In Progress */}
-      {selectedRecruitment?.status === "In Progress" && (
-        <TabsContent value="approve">
-          <p>Approve this recruitment.</p>
-          <div className="flex justify-end mt-4">
-            <Button onClick={handleApprove}>Approve</Button>
-          </div>
-        </TabsContent>
-      )}
+            {/* Approve Tab for In Progress */}
+            {selectedRecruitment?.status === "In Progress" && (
+              <TabsContent value="approve">
+                <Label htmlFor="salary">Salary</Label>
+                <Input
+                  type="number"
+                  value={salary}
+                  onChange={handleSalaryChange}
+                  placeholder="Input salary"
+                />
 
-      {/* Reject Tab for In Progress */}
-      {selectedRecruitment?.status === "In Progress" && (
-        <TabsContent value="reject">
-          <p>Reject this recruitment.</p>
-          <div className="flex justify-end mt-4">
-            <Button variant="destructive" onClick={handleReject}>
-              Reject
-            </Button>
-          </div>
-        </TabsContent>
-      )}
+                <Label htmlFor="message-2">Your Message</Label>
+                <Textarea
+                  id="message-2"
+                  value={approvedMessage}
+                  onChange={handleApproveMessageChange}
+                  className="w-full min-h-32"
+                />
+                <div className="flex justify-end mt-4">
+                  <Button
+                    onClick={() => handleApproveMeeting(selectedRecruitment)}
+                  >
+                    Request Meeting
+                  </Button>
+                </div>
+              </TabsContent>
+            )}
 
-      {/* Set to Pending Tab for Rejected */}
-      {selectedRecruitment?.status === "Rejected" && (
-        <TabsContent value="pending">
-          <p>Set this recruitment back to pending.</p>
-          <div className="flex justify-end mt-4">
-            <Button onClick={handleSetPending}>Set to Pending</Button>
-          </div>
-        </TabsContent>
-      )}
-    </Tabs>
-  </DialogContent>
-</Dialog>
+            {/* Reject Tab for In Progress */}
+            {selectedRecruitment?.status === "In Progress" && (
+              <TabsContent value="reject">
+                <Label htmlFor="message-reject">Your Message</Label>
+                <Textarea
+                  id="message-reject"
+                  value={rejectMessage}
+                  onChange={handleRejectMessageChange}
+                  className="w-full min-h-32"
+                />
+                <div className="flex justify-end mt-4">
+                  <Button onClick={() => handleReject(selectedRecruitment)}>
+                    Reject
+                  </Button>
+                </div>
+              </TabsContent>
+            )}
 
+            {selectedRecruitment?.status === "Approved" && (
+              <TabsContent value="Approve">
+                <Card>
+                  <div className="flex space-x-2">
+                    <CardContent className="p-5">
+                      <div className="grid w-full max-w-sm items-center gap-1.5">
+                        <Label htmlFor="email">Email</Label>
+                        <Input
+                          type="email"
+                          id="email"
+                          value={selectedRecruitment?.emailAddress || ""}
+                          readOnly
+                        />
+                      </div>
+                      <div className="grid w-full max-w-sm items-center gap-1.5">
+                        <Label htmlFor="fullName">Full Name</Label>
+                        <Input
+                          type="text"
+                          id="fullName"
+                          value={selectedRecruitment?.fullName || ""}
+                          readOnly
+                        />
+                      </div>
+                      <div className="grid w-full max-w-sm items-center gap-1.5">
+                        <Label htmlFor="position">Position Applied For</Label>
+                        <Input
+                          type="text"
+                          id="position"
+                          value={selectedRecruitment?.positionAppliedFor || ""}
+                          readOnly
+                        />
+                      </div>
+                      <div className="grid w-full max-w-sm items-center gap-1.5">
+                        <Label htmlFor="department">Department</Label>
+                        <Input
+                          type="text"
+                          id="department"
+                          value={
+                            selectedRecruitment?.departmentAppliedFor || ""
+                          }
+                          readOnly
+                        />
+                      </div>
+                    </CardContent>
+                    <CardContent className="p-5">
+                      <div className="grid w-full max-w-sm items-center gap-1.5">
+                        <Label htmlFor="phoneNumber">Phone Number</Label>
+                        <Input
+                          type="text"
+                          id="phoneNumber"
+                          value={selectedRecruitment?.phoneNumber || ""}
+                          readOnly
+                        />
+                      </div>
+                      <div className="grid w-full max-w-sm items-center gap-1.5">
+                        <Label htmlFor="experience">
+                          Previous Work Experience
+                        </Label>
+                        <Input
+                          type="text"
+                          id="experience"
+                          value={
+                            selectedRecruitment?.previousWorkExperience || ""
+                          }
+                          readOnly
+                        />
+                      </div>
+                      <div className="grid w-full max-w-sm items-center gap-1.5">
+                        <Label htmlFor="skills">Skills</Label>
+                        <Input
+                          type="text"
+                          id="skills"
+                          value={selectedRecruitment?.skills || ""}
+                          readOnly
+                        />
+                      </div>
+                      <div className="grid w-full max-w-sm items-center gap-1.5">
+                        <Label htmlFor="cvLink">CV Link</Label>
+                        <Input
+                          type="text"
+                          id="cvLink"
+                          value={selectedRecruitment?.cvLink || ""}
+                          readOnly
+                        />
+                      </div>
+                    </CardContent>
+                  </div>
+                </Card>
+
+                <div className="flex justify-end mt-4">
+                  <Button onClick={handleSetPending}>Set to Pending</Button>
+                </div>
+              </TabsContent>
+            )}
+
+            {/* Set to Pending Tab for Rejected */}
+            {selectedRecruitment?.status === "Rejected" && (
+              <TabsContent value="pending">
+                <p>Set this recruitment back to pending.</p>
+                <div className="flex justify-end mt-4">
+                  <Button onClick={handleSetPending}>Set to Pending</Button>
+                </div>
+              </TabsContent>
+            )}
+          </Tabs>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
