@@ -242,10 +242,14 @@ const Index = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          name: row.fullName,
+          email: row.emailAddress,
           employeeID: row.employeeID,
           status: "Approved",
+          startDate: row.startDate,
+          endDate: row.endDate,
           leaveStatus: "On Leave",
-        }), // Include status in the request body
+        }),
       });
 
       if (response.ok) {

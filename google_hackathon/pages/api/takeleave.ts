@@ -6,7 +6,7 @@ export default async function handler(
 ) {
   try {
     const response = await fetch(
-      "https://script.google.com/macros/s/AKfycbxpRimFmb3aL9BEx08GBI2pXKy-jPm2Ca5Oxx-aagtcUiFoKrYEu8p1OrH_ZAgnzi7w/exec"
+      "https://script.google.com/macros/s/AKfycbw2ZcnCTJPUExRbR2KL8CdWBjvotxuO4TIhft6y3xHwFg7Z2lOX07V1jeMx-nqCrpquuw/exec"
     );
 
     const text = await response.text(); // Get the raw response text
