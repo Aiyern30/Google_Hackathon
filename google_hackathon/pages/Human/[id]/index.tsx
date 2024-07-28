@@ -1,14 +1,27 @@
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import Header from "@/components/ui/HR Components/Header";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/Card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardFooter,
+} from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/Select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/Select";
 import { DatePickerDemo } from "@/components/ui/DatePickerDemo";
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const ProfilePage = () => {
   const router = useRouter();
@@ -18,14 +31,14 @@ const ProfilePage = () => {
   const [error, setError] = useState<string | null>(null);
   const [emailError, setEmailError] = useState<string | null>(null); // State for email validation error
   const [formData, setFormData] = useState<any>({
-    id: '',
-    name: '',
-    position: '',
-    department: '',
-    email: '',
-    phone: '',
-    hireDate: '',
-    status: ''
+    id: "",
+    name: "",
+    position: "",
+    department: "",
+    email: "",
+    phone: "",
+    hireDate: "",
+    status: "",
   });
 
   useEffect(() => {
@@ -44,7 +57,7 @@ const ProfilePage = () => {
               email: result[4],
               phone: result[5],
               hireDate: new Date(result[6]),
-              status: result[7]
+              status: result[7],
             };
 
             setData(mappedData);
@@ -65,8 +78,8 @@ const ProfilePage = () => {
 
   const formatDate = (date: Date) => {
     const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
   };
 
@@ -106,10 +119,10 @@ const ProfilePage = () => {
     setEmailError(null);
 
     try {
-      const response = await fetch('/api/updateEmployee', {
-        method: 'PUT',
+      const response = await fetch("/api/updateEmployee", {
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           ...formData,
@@ -119,7 +132,7 @@ const ProfilePage = () => {
 
       if (response.ok) {
         setData(formData);
-        toast.success('Profile updated successfully!');
+        toast.success("Profile updated successfully!");
       } else {
         const result = await response.json();
         setError(result.error || "Failed to save data");
@@ -139,25 +152,45 @@ const ProfilePage = () => {
         <div className="fixed inset-0 flex items-center justify-center bg-white">
           <div className="relative flex justify-center items-center">
             <div className="absolute animate-spin rounded-full h-32 w-32 border-t-4 border-b-4 border-purple-500"></div>
-            <img src="https://www.svgrepo.com/show/509001/avatar-thinking-9.svg" className="rounded-full h-28 w-28" />
+            <img
+              src="https://www.svgrepo.com/show/509001/avatar-thinking-9.svg"
+              className="rounded-full h-28 w-28"
+            />
           </div>
         </div>
       ) : data ? (
         <Card className="max-w-[500px] w-full mx-auto my-5">
           <CardHeader>
             <CardTitle className="text-center">{data.name}</CardTitle>
-            <CardDescription className="text-center">{data.position}</CardDescription>
+            <CardDescription className="text-center">
+              {data.position}
+            </CardDescription>
           </CardHeader>
           <CardContent className="flex">
             <div className="w-full">
               <div className="flex space-x-5">
                 <div className="w-1/2">
                   <Label htmlFor="id">ID</Label>
-                  <Input name="id" value={formData.id} onChange={handleInputChange} readOnly disabled />
+                  <Input
+                    name="id"
+                    value={formData.id}
+                    onChange={handleInputChange}
+                    readOnly
+                    disabled
+                  />
                   <Label htmlFor="name">Name</Label>
-                  <Input name="name" value={formData.name} onChange={handleInputChange} />
+                  <Input
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                  />
                   <Label htmlFor="position">Position</Label>
-                  <Select value={formData.position} onValueChange={(value) => handleSelectChange("position", value)}>
+                  <Select
+                    value={formData.position}
+                    onValueChange={(value) =>
+                      handleSelectChange("position", value)
+                    }
+                  >
                     <SelectTrigger className="w-full">
                       <SelectValue>{formData.position}</SelectValue>
                     </SelectTrigger>
@@ -170,7 +203,12 @@ const ProfilePage = () => {
                     </SelectContent>
                   </Select>
                   <Label htmlFor="department">Department</Label>
-                  <Select value={formData.department} onValueChange={(value) => handleSelectChange("department", value)}>
+                  <Select
+                    value={formData.department}
+                    onValueChange={(value) =>
+                      handleSelectChange("department", value)
+                    }
+                  >
                     <SelectTrigger className="w-full">
                       <SelectValue>{formData.department}</SelectValue>
                     </SelectTrigger>
@@ -183,16 +221,35 @@ const ProfilePage = () => {
                     </SelectContent>
                   </Select>
                   <Label htmlFor="email">Email</Label>
-                  <Input name="email" value={formData.email} onChange={handleInputChange} />
-                  {emailError && <p className="text-red-500 text-sm mt-1">{emailError}</p>} {/* Show email error message */}
+                  <Input
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                  />
+                  {emailError && (
+                    <p className="text-red-500 text-sm mt-1">{emailError}</p>
+                  )}{" "}
+                  {/* Show email error message */}
                 </div>
                 <div className="w-1/2">
                   <Label htmlFor="phone">Phone Number</Label>
-                  <Input name="phone" value={formData.phone} onChange={handleInputChange} />
+                  <Input
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                  />
                   <Label htmlFor="hireDate">Hire Date</Label>
-                  <DatePickerDemo onDateChange={handleDateChange} selectedDate={formData.hireDate} />
+                  <DatePickerDemo
+                    onDateChange={handleDateChange}
+                    selectedDate={formData.hireDate}
+                  />
                   <Label htmlFor="status">Status</Label>
-                  <Select value={formData.status} onValueChange={(value) => handleSelectChange("status", value)}>
+                  <Select
+                    value={formData.status}
+                    onValueChange={(value) =>
+                      handleSelectChange("status", value)
+                    }
+                  >
                     <SelectTrigger className="w-full">
                       <SelectValue>{formData.status}</SelectValue>
                     </SelectTrigger>
@@ -207,7 +264,9 @@ const ProfilePage = () => {
           </CardContent>
           <CardFooter>
             <div className="flex justify-end space-x-2 w-full">
-              <Button variant={"destructive"} onClick={handleSave}>Save</Button>
+              <Button variant={"destructive"} onClick={handleSave}>
+                Save
+              </Button>
             </div>
           </CardFooter>
         </Card>
