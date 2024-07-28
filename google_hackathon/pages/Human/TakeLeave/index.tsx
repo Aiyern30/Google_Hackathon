@@ -251,7 +251,7 @@ const Index = () => {
           leaveStatus: "On Leave",
         }),
       });
-  
+
       if (response.ok) {
         // Re-fetch data from the server to update the table
         fetchData();
@@ -262,7 +262,7 @@ const Index = () => {
       console.error("Error approving leave:", error);
     }
   };
-  
+
   const handleDelete = async (row: TakeLeave) => {
     try {
       const response = await fetch(`/api/approveTakeLeave`, {
