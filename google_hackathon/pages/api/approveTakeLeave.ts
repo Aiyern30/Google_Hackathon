@@ -1,28 +1,23 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === "POST") {
-    const { employeeID, status, leaveStatus } = req.body;
+    const { name,email, employeeID, status, startDate, endDate, leaveStatus } = req.body;
 
     try {
       const response = await fetch(
-        "https://script.google.com/macros/s/AKfycbyzarQXAoAjKj_pz3htvpwQnZxP7f7-YuTammD8sfPEhgzI-2gkleV-eNScXRYdhQqmJw/exec",
+        "https://script.google.com/macros/s/AKfycbzw2KSUWJC82ErqESht9Z3y6YkrUXNqJXN4vPZ3LMGoWvqtic_lBuAp2A96HAjN6jP04A/exec",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ employeeID, status, leaveStatus }), // Pass both employeeID and status to the Apps Script
+          body: JSON.stringify({name, email, employeeID, status, startDate, endDate, leaveStatus }),
         }
       );
 
       if (!response.ok) {
-        throw new Error(
-          `Network response was not ok. Status: ${response.status}`
-        );
+        throw new Error(`Network response was not ok. Status: ${response.status}`);
       }
 
       const data = await response.json();

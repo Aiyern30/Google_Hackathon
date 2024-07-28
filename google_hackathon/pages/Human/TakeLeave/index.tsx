@@ -242,12 +242,16 @@ const Index = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          name: row.fullName,
+          email: row.emailAddress,
           employeeID: row.employeeID,
           status: "Approved",
+          startDate: row.startDate,
+          endDate: row.endDate,
           leaveStatus: "On Leave",
-        }), // Include status in the request body
+        }),
       });
-
+  
       if (response.ok) {
         // Re-fetch data from the server to update the table
         fetchData();
@@ -258,7 +262,7 @@ const Index = () => {
       console.error("Error approving leave:", error);
     }
   };
-
+  
   const handleDelete = async (row: TakeLeave) => {
     try {
       const response = await fetch(`/api/approveTakeLeave`, {
