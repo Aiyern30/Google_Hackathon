@@ -418,44 +418,38 @@ const Index = () => {
       </div>
       <div className="container mx-auto p-5">
         {loading ? (
-          <div>Loading...</div>
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
+          </div>
         ) : (
           <>
-            <Tabs defaultValue="pending">
-              <div className="flex">
-                <TabsList>
-                  <TabsTrigger
-                    value="pending"
-                    onClick={() => setActiveTab("Pending")}
-                  >
-                    Pending
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="in-progress"
-                    onClick={() => setActiveTab("In Progress")}
-                  >
-                    In Progress
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="approved"
-                    onClick={() => setActiveTab("Approved")}
-                  >
-                    Approved
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="rejected"
-                    onClick={() => setActiveTab("Rejected")}
-                  >
-                    Rejected
-                  </TabsTrigger>
-                </TabsList>
-                <Input
-                  type="email"
-                  id="email"
-                  placeholder="Email"
-                  className="min-w-96"
-                />
-              </div>
+            <Tabs defaultValue="pending" className="pb-2">
+              <TabsList>
+                <TabsTrigger
+                  value="pending"
+                  onClick={() => setActiveTab("Pending")}
+                >
+                  Pending
+                </TabsTrigger>
+                <TabsTrigger
+                  value="in-progress"
+                  onClick={() => setActiveTab("In Progress")}
+                >
+                  In Progress
+                </TabsTrigger>
+                <TabsTrigger
+                  value="approved"
+                  onClick={() => setActiveTab("Approved")}
+                >
+                  Approved
+                </TabsTrigger>
+                <TabsTrigger
+                  value="rejected"
+                  onClick={() => setActiveTab("Rejected")}
+                >
+                  Rejected
+                </TabsTrigger>
+              </TabsList>
             </Tabs>
 
             <DataTable
