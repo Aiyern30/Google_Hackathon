@@ -99,9 +99,6 @@ export default function Home() {
               </Button>
             </form>
           </CardContent>
-          <CardFooter className="text-center text-sm">
-            <p>Forgot your password?</p>
-          </CardFooter>
         </Card>
       </div>
     </>

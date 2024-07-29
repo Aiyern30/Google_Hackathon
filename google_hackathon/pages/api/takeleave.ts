@@ -6,11 +6,10 @@ export default async function handler(
 ) {
   try {
     const response = await fetch(
-      "https://script.google.com/macros/s/AKfycbxpRimFmb3aL9BEx08GBI2pXKy-jPm2Ca5Oxx-aagtcUiFoKrYEu8p1OrH_ZAgnzi7w/exec"
+      "https://script.google.com/macros/s/AKfycbw2ZcnCTJPUExRbR2KL8CdWBjvotxuO4TIhft6y3xHwFg7Z2lOX07V1jeMx-nqCrpquuw/exec"
     );
 
     const text = await response.text(); // Get the raw response text
-    console.log("Raw response text:", text); // Log the raw response text
 
     if (!response.ok) {
       throw new Error(
@@ -19,7 +18,6 @@ export default async function handler(
     }
 
     const data = JSON.parse(text); // Parse the raw text as JSON
-    console.log("API data:", data); // Log the parsed data
     res.status(200).json(data);
   } catch (error) {
     if (error instanceof SyntaxError) {

@@ -26,6 +26,8 @@ import {
 } from "@/components/ui/Pagination";
 import { useRouter } from "next/router";
 import Header from "@/components/ui/HR Components/Header";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/Tabs";
+import { Action } from "@radix-ui/react-alert-dialog";
 
 type TakeLeave = {
   timestamp: string;
@@ -37,17 +39,62 @@ type TakeLeave = {
   endDate: string;
   skills: string;
   reason: string;
+  status: "Pending" | "Approved" | "Rejected";
 };
 
-const columns: ColumnDef<TakeLeave>[] = [
-  // { accessorKey: "timestamp", header: "Timestamp" },
+const getColumns = (
+  activeTab: string,
+  handleApprove: (row: TakeLeave) => void,
+  handleDelete: (row: TakeLeave) => void
+): ColumnDef<TakeLeave>[] => [
   { accessorKey: "emailAddress", header: "Email Address" },
   { accessorKey: "fullName", header: "Full Name" },
   { accessorKey: "employeeID", header: "Employee ID" },
   { accessorKey: "daysTotal", header: "Days in Total" },
-  { accessorKey: "startDate", header: "Leave Start Date" },
-  { accessorKey: "endDate", header: "Leave End Date" },
-  { accessorKey: "reason", header: "Reason" }
+  {
+    accessorKey: "startDate",
+    header: "Leave Start Date",
+    cell: (info) => {
+      const date = new Date(info.getValue() as string);
+      return date.toLocaleDateString();
+    },
+  },
+  {
+    accessorKey: "endDate",
+    header: "Leave End Date",
+    cell: (info) => {
+      const date = new Date(info.getValue() as string);
+      return date.toLocaleDateString();
+    },
+  },
+  { accessorKey: "reason", header: "Reason" },
+  {
+    id: "actions",
+    header: "Actions",
+    cell: (info) => {
+      const row = info.row.original;
+      return (
+        <div className="flex space-x-2">
+          {activeTab === "Pending" && (
+            <>
+              <Button
+                onClick={() => handleApprove(row)}
+                className="bg-green-500 text-white"
+              >
+                Approve
+              </Button>
+              <Button
+                onClick={() => handleDelete(row)}
+                className="bg-red-500 text-white"
+              >
+                Delete
+              </Button>
+            </>
+          )}
+        </div>
+      );
+    },
+  },
 ];
 
 const getNewEmployeeCount = (data: TakeLeave[]) => {
@@ -60,11 +107,15 @@ const getNewEmployeeCount = (data: TakeLeave[]) => {
 function DataTable<TData extends TakeLeave>({
   columns,
   data,
+  onRowClick,
   onFilterChange,
+  activeTab,
 }: {
   columns: ColumnDef<TData>[];
   data: TData[];
+  onRowClick: (row: TData) => void;
   onFilterChange: (column: string, value: string) => void;
+  activeTab: string;
 }) {
   const router = useRouter();
   const table = useReactTable({
@@ -73,8 +124,8 @@ function DataTable<TData extends TakeLeave>({
     getCoreRowModel: getCoreRowModel(),
   });
 
-  const handleRowClick = (recruitmentId: string) => {
-    router.push(`/TakeLeave/${recruitmentId}`);
+  const handleRowClick = (WorkerId: string) => {
+    router.push(`/TakeLeave/${WorkerId}`);
   };
 
   return (
@@ -96,19 +147,22 @@ function DataTable<TData extends TakeLeave>({
                 ))}
               </TableRow>
               <TableRow>
-                {headerGroup.headers.map((header) => (
-                  <TableCell key={header.id} className="p-2">
-                    <input
-                      id={header.id}
-                      type="text"
-                      className="block w-full border-gray-300 rounded-md shadow-sm text-xs p-3"
-                      placeholder={`Filter ${header.column.columnDef.header}`}
-                      onChange={(e) =>
-                        onFilterChange(header.column.id, e.target.value)
-                      }
-                    />
-                  </TableCell>
-                ))}
+                {headerGroup.headers.map(
+                  (header) =>
+                    header.id !== "actions" && (
+                      <TableCell key={header.id} className="p-2">
+                        <input
+                          id={header.id}
+                          type="text"
+                          className="block w-full border-gray-300 rounded-md shadow-sm text-xs p-3"
+                          placeholder={`Filter ${header.column.columnDef.header}`}
+                          onChange={(e) =>
+                            onFilterChange(header.column.id, e.target.value)
+                          }
+                        />
+                      </TableCell>
+                    )
+                )}
               </TableRow>
             </React.Fragment>
           ))}
@@ -142,6 +196,9 @@ const Index = () => {
   const [employeeData, setEmployeeData] = useState<TakeLeave[]>([]);
   const [filters, setFilters] = useState<{ [key: string]: string }>({});
   const [loading, setLoading] = useState<boolean>(true);
+  const [activeTab, setActiveTab] = useState<string>("Pending");
+  const [selectedWorker, setSelectedWorker] = useState<TakeLeave | null>(null);
+
   const itemsPerPage = 5;
 
   const handlePageChange = (pageNumber: number) => {
@@ -150,40 +207,106 @@ const Index = () => {
     }
   };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch("/api/takeleave");
-        const data = await response.json();
-        const formattedData = data.map((row: any) => ({
-          timestamp: row.Timestamp,
-          emailAddress: row["Email address"],
-          fullName: row["Full Name"],
-          employeeID: row["Employee ID "],
-          daysTotal: row["How many days in total?"],
-          startDate: row["Leave Start Date"],
-          endDate: row["Leave End Date"],
-          reason: row["Reason"],
-        }));
-        setEmployeeData(formattedData);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch("/api/takeleave");
+      const data = await response.json();
+      const formattedData = data.map((row: any) => ({
+        timestamp: row.Timestamp,
+        emailAddress: row["Email address"],
+        fullName: row["Full Name"],
+        employeeID: row["Employee ID "],
+        daysTotal: row["How many days in total?"],
+        startDate: row["Leave Start Date"],
+        endDate: row["Leave End Date"],
+        reason: row["Reason"],
+        status: row["Status"],
+      }));
+      setEmployeeData(formattedData);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchData();
   }, []);
 
+  const handleApprove = async (row: TakeLeave) => {
+    try {
+      const response = await fetch(`/api/handleLeave`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: row.fullName,
+          email: row.emailAddress,
+          employeeID: row.employeeID,
+          status: "Approved",
+          action: "Approve",
+          startDate: row.startDate,
+          endDate: row.endDate,
+          leaveStatus: "On Leave",
+        }),
+      });
+
+      if (response.ok) {
+        // Re-fetch data from the server to update the table
+        fetchData();
+      } else {
+        console.error("Failed to approve leave:", await response.json());
+      }
+    } catch (error) {
+      console.error("Error approving leave:", error);
+    }
+  };
+
+  const handleDelete = async (row: TakeLeave) => {
+    try {
+      const response = await fetch(`/api/handleLeave`, {
+        // Ensure this points to your correct API route
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          employeeID: row.employeeID,
+          status: "Rejected",
+          action: "Reject",
+          name: row.fullName, // Include employee name
+          email: row.emailAddress, // Include employee email
+          startDate: row.startDate, // Include leave start date
+          endDate: row.endDate, // Include leave end date
+        }), // Include all necessary data in the request body
+      });
+
+      if (response.ok) {
+        // Re-fetch data from the server to update the table
+        fetchData();
+      } else {
+        console.error("Failed to reject leave:", await response.json());
+      }
+    } catch (error) {
+      console.error("Error rejecting leave:", error);
+    }
+  };
+
   const filteredData = useMemo(() => {
     return employeeData.filter((employee) => {
-      return Object.entries(filters).every(([column, value]) => {
+      const matchesStatus =
+        employee.status &&
+        employee.status.toLowerCase() === activeTab.toLowerCase();
+      const otherFilters = Object.entries(filters).every(([column, value]) => {
         const columnValue = (employee as any)[column] as string;
         return columnValue.toLowerCase().includes(value.toLowerCase());
       });
+      return matchesStatus && otherFilters;
     });
-  }, [employeeData, filters]);
+  }, [employeeData, filters, activeTab]);
 
   const currentTableData = useMemo(() => {
     const firstPageIndex = (currentPage - 1) * itemsPerPage;
@@ -192,6 +315,10 @@ const Index = () => {
   }, [filteredData, currentPage]);
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+
+  const handleRowClick = (worker: TakeLeave) => {
+    setSelectedWorker(worker);
+  };
 
   const handleFilterChange = (column: string, value: string) => {
     setFilters((prevFilters) => ({
@@ -234,23 +361,6 @@ const Index = () => {
                 </p>
               </CardContent>
             </Card>
-
-            {/* <Card className="min-w-64">
-              <CardHeader>
-                <CardTitle className="text-center">
-                  Pending Applications
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-center font-mono text-5xl">
-                  {
-                    employeeData.filter(
-                      (employee) => employee.status === "Pending"
-                    ).length
-                  }
-                </p>
-              </CardContent>
-            </Card> */}
           </div>
         </div>
 
@@ -260,10 +370,35 @@ const Index = () => {
           </div>
         ) : (
           <div>
+            <Tabs defaultValue="pending" className="pb-2">
+              <TabsList>
+                <TabsTrigger
+                  value="pending"
+                  onClick={() => setActiveTab("Pending")}
+                >
+                  Pending
+                </TabsTrigger>
+
+                <TabsTrigger
+                  value="approved"
+                  onClick={() => setActiveTab("Approved")}
+                >
+                  Approved
+                </TabsTrigger>
+                <TabsTrigger
+                  value="rejected"
+                  onClick={() => setActiveTab("Rejected")}
+                >
+                  Rejected
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
             <DataTable
-              columns={columns}
+              columns={getColumns(activeTab, handleApprove, handleDelete)}
               data={currentTableData}
+              onRowClick={handleRowClick}
               onFilterChange={handleFilterChange}
+              activeTab={activeTab}
             />
             <Pagination>
               <PaginationContent>
