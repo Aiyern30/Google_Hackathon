@@ -5,17 +5,27 @@ export default async function handler(
   res: NextApiResponse
 ) {
   if (req.method === "POST") {
-    const { employeeID, status } = req.body;
+    const { name, email, employeeID, status, startDate, endDate, action } =
+      req.body;
 
     try {
       const response = await fetch(
-        "https://script.google.com/macros/s/AKfycbw42mdbWJArqYxjhBy_6zCAAiNG3vgOTcezjSsOGaA4CDA4inuGRdZSh9Gp3ZIrt1isBQ/exec",
+        "https://script.google.com/macros/s/AKfycbw8mZIS7Ng2ogWWDtjFRck2k9Hb2n4RH2cybzWH3A1YCSqvDxz7csYn0uFUZSmhfLuh8Q/exec",
+
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ employeeID, status }), // Pass both employeeID and status to the Apps Script
+          body: JSON.stringify({
+            name,
+            email,
+            action,
+            employeeID,
+            status,
+            startDate,
+            endDate,
+          }),
         }
       );
 

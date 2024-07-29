@@ -285,12 +285,16 @@ const Index = () => {
         <Pagination>
           <PaginationContent>
             <PaginationPrevious
+              className="cursor-pointer"
               onClick={() => handlePageChange(currentPage - 1)}
             >
               <Button>Previous</Button>
             </PaginationPrevious>
             <PaginationItem>{`Page ${currentPage} of ${totalPages}`}</PaginationItem>
-            <PaginationNext onClick={() => handlePageChange(currentPage + 1)}>
+            <PaginationNext
+              onClick={() => handlePageChange(currentPage + 1)}
+              className="cursor-pointer"
+            >
               <Button>Next</Button>
             </PaginationNext>
           </PaginationContent>

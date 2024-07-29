@@ -27,6 +27,7 @@ import {
 import { useRouter } from "next/router";
 import Header from "@/components/ui/HR Components/Header";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/Tabs";
+import { Action } from "@radix-ui/react-alert-dialog";
 
 type TakeLeave = {
   timestamp: string;
@@ -236,7 +237,7 @@ const Index = () => {
 
   const handleApprove = async (row: TakeLeave) => {
     try {
-      const response = await fetch(`/api/approveTakeLeave`, {
+      const response = await fetch(`/api/handleLeave`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -246,6 +247,7 @@ const Index = () => {
           email: row.emailAddress,
           employeeID: row.employeeID,
           status: "Approved",
+          action: "Approve",
           startDate: row.startDate,
           endDate: row.endDate,
           leaveStatus: "On Leave",
@@ -265,7 +267,8 @@ const Index = () => {
 
   const handleDelete = async (row: TakeLeave) => {
     try {
-      const response = await fetch(`/api/approveTakeLeave`, {
+      const response = await fetch(`/api/handleLeave`, {
+        // Ensure this points to your correct API route
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -273,17 +276,22 @@ const Index = () => {
         body: JSON.stringify({
           employeeID: row.employeeID,
           status: "Rejected",
-        }), // Include status in the request body
+          action: "Reject",
+          name: row.fullName, // Include employee name
+          email: row.emailAddress, // Include employee email
+          startDate: row.startDate, // Include leave start date
+          endDate: row.endDate, // Include leave end date
+        }), // Include all necessary data in the request body
       });
 
       if (response.ok) {
         // Re-fetch data from the server to update the table
         fetchData();
       } else {
-        console.error("Failed to approve leave:", await response.json());
+        console.error("Failed to reject leave:", await response.json());
       }
     } catch (error) {
-      console.error("Error approving leave:", error);
+      console.error("Error rejecting leave:", error);
     }
   };
 
