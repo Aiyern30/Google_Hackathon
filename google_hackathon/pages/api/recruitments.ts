@@ -10,7 +10,6 @@ export default async function handler(
     );
 
     const text = await response.text(); // Get the raw response text
-    console.log("Raw response text:", text); // Log the raw response text
 
     if (!response.ok) {
       throw new Error(
