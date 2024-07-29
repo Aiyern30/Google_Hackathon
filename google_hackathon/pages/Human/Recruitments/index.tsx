@@ -308,44 +308,134 @@ const Index = () => {
     }
   };
 
-  const handleRequestMeeting = (recruitment: Recruitment) => {
+  const handleRequestMeeting = async (recruitment: Recruitment) => {
     if (recruitment) {
-      console.log("Meeting requested for:", recruitment);
-      console.log("Date:", format(selectedDate, "yyyy-MM-dd"));
-      console.log("Time:", time);
-      console.log("Message:", message);
-      setSelectedRecruitment(null); // Close dialog
-      setMessage(""); // Reset message input
-      setTime(""); // Reset time input
+      try {
+        const response = await fetch('/api/handleRequestMeeting', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            action: 'requestMeeting',
+            recruitment: {
+              ...recruitment,
+              date: format(selectedDate, 'yyyy-MM-dd'),
+              time,
+              message,
+            },
+          }),
+        });
+  
+        const result = await response.json();
+        if (response.ok) {
+          console.log('Meeting requested for:', result);
+        } else {
+          console.error('Error requesting meeting:', result);
+        }
+      } catch (error) {
+        console.error('Error requesting meeting:', error);
+      } finally {
+        setSelectedRecruitment(null);
+        setMessage('');
+        setTime('');
+      }
     }
   };
-  const handleApproveMeeting = (recruitment: Recruitment) => {
+  
+  
+  const handleApproveMeeting = async (recruitment: Recruitment) => {
     if (recruitment) {
-      console.log("Meeting requested for:", recruitment);
-      console.log("Date:", format(selectedDate, "yyyy-MM-dd"));
-      console.log("Time:", time);
-      console.log("Message:", message);
-      setSelectedRecruitment(null); // Close dialog
-      setMessage(""); // Reset message input
-      setTime(""); // Reset time input
+      try {
+        const response = await fetch('', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            action: 'approveMeeting',
+            recruitment: {
+              ...recruitment,
+              date: format(selectedDate, 'yyyy-MM-dd'),
+              time,
+              message,
+            },
+          }),
+        });
+  
+        const result = await response.json();
+        if (response.ok) {
+          console.log('Meeting approved for:', result);
+        } else {
+          console.error('Error approving meeting:', result);
+        }
+      } catch (error) {
+        console.error('Error approving meeting:', error);
+      } finally {
+        setSelectedRecruitment(null);
+        setMessage('');
+        setTime('');
+      }
     }
   };
 
-  const handleReject = (recruitment: Recruitment) => {
+  const handleReject = async (recruitment: Recruitment) => {
     if (recruitment) {
-      console.log("Rejected:", recruitment);
-      console.log("Message:", message);
-      setSelectedRecruitment(null); // Close dialog
-      setRejectMessage(""); // Reset message input
+      try {
+        const response = await fetch('', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            action: 'reject',
+            recruitment,
+            message: rejectMessage,
+          }),
+        });
+  
+        const result = await response.json();
+        if (response.ok) {
+          console.log('Rejected:', result);
+        } else {
+          console.error('Error rejecting:', result);
+        }
+      } catch (error) {
+        console.error('Error rejecting:', error);
+      } finally {
+        setSelectedRecruitment(null);
+        setRejectMessage('');
+      }
     }
   };
 
-  const handleSetPending = () => {
-    if (selectedRecruitment) {
-      console.log("Changed to Pending:", selectedRecruitment);
-      setSelectedRecruitment(null); // Close dialog
+  const handleSetPending = async () => {
+  if (selectedRecruitment) {
+    try {
+      const response = await fetch('', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'setPending',
+          recruitment: selectedRecruitment,
+        }),
+      });
+
+      const result = await response.json();
+      if (response.ok) {
+        console.log('Changed to Pending:', result);
+      } else {
+        console.error('Error setting to pending:', result);
+      }
+    } catch (error) {
+      console.error('Error setting to pending:', error);
+    } finally {
+      setSelectedRecruitment(null);
     }
-  };
+  }
+};
 
   const handleDialogClose = () => {
     setSelectedRecruitment(null); // Close dialog
@@ -605,7 +695,7 @@ const Index = () => {
                   <Button
                     onClick={() => handleApproveMeeting(selectedRecruitment)}
                   >
-                    Request Meeting
+                    Approve
                   </Button>
                 </div>
               </TabsContent>
